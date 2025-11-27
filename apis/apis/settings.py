@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,21 +33,24 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-    'myapp',
+    'dbbackup',
+    'church',
+    'household',
+    'role',
 ]
 
 MIDDLEWARE = [
+     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -120,6 +125,28 @@ USE_I18N = True
 
 USE_TZ = True
 
+REST_FRAMEWORK = {
+'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
+'PAGE_SIZE':10,
+'MAX_PAGE_SIZE':10,
+'DEFAULT_FILTER_BACKENDS': (
+'django_filters.rest_framework.DjangoFilterBackend',
+'rest_framework.filters.OrderingFilter',
+'rest_framework.filters.SearchFilter',
+),
+'DEFAULT_AUTHENTICATION_CLASSES': (
+'rest_framework_simplejwt.authentication.JWTAuthentication',
+),
+'DEFAULT_PERMISSION_CLASSES': (
+            'rest_framework.permissions.IsAuthenticated', # Or other default permissions
+),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=2),
+    'UPDATE_LAST_LOGIN': True,
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

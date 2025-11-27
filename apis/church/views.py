@@ -1,0 +1,55 @@
+from .models import Church
+from .serializers import ChurchSerializers
+from django.shortcuts import render
+from rest_framework import status
+from rest_framework.reverse import reverse
+from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
+from urllib.parse import urlparse
+from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
+from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
+from rest_framework.exceptions import PermissionDenied
+from django.http import HttpResponse
+
+
+
+#this generic class will handle GET method to be used by the admin alone
+class ChurchList(generics.ListAPIView):
+    queryset = Church.objects.all()
+    serializer_class = ChurchSerializers
+    permission_classes = [AllowAny,]
+    name = 'church-list'
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    
+    #you can filter by field names specified here keyword e.g url?name='church one'
+    filterset_fields = ('name','address','description',) 
+
+     #you can search using the "search" keyword
+    search_fields = ('name','address','description',) 
+
+    #you can order using the "ordering" keyword
+    ordering_fields = ('name','address','description',) 
+
+
+class UpdateChurch(generics.UpdateAPIView):
+    queryset = Church.objects.all()
+    serializer_class = ChurchSerializers
+    permission_classes = [AllowAny,]
+    name = 'church-update'
+    lookup_field = "id"
+
+class DeleteChurch(generics.DestroyAPIView):
+    queryset = Church.objects.all()
+    serializer_class = ChurchSerializers
+    permission_classes = [AllowAny,]
+    name = 'delete-church'
+    lookup_field = "id"
+
+class CreateChurch(generics.CreateAPIView):
+    queryset = Church.objects.all()
+    serializer_class = ChurchSerializers
+    permission_classes = [AllowAny,]
+    name = 'create-church'
