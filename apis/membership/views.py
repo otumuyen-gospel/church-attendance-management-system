@@ -1,5 +1,5 @@
-from .models import Role
-from .serializers import RoleSerializers
+from .models import Membership
+from .serializers import MembershipSerializers
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -12,51 +12,44 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
 from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
-from rest_framework.views import APIView
 
 
 
 #this generic class will handle GET method to be used by the admin alone
-class RoleList(generics.ListAPIView):
-    queryset = Role.objects.all()
-    serializer_class = RoleSerializers
+class MembershipList(generics.ListAPIView):
+    queryset = Membership.objects.all()
+    serializer_class = MembershipSerializers
     permission_classes = [AllowAny,]
-    required_groups = []
-    name = 'role-list'
+    name = 'membership-list'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
     #you can filter by field names specified here keyword e.g url?name='church one'
-    filterset_fields = ('name','description',)  
+    filterset_fields = ('status','description',) 
 
      #you can search using the "search" keyword
-    search_fields = ('name','description',)   
+    search_fields = ('status','description',) 
 
     #you can order using the "ordering" keyword
-    ordering_fields = ('name','description',) 
+    ordering_fields = ('status','description',) 
 
 
-class UpdateRole(generics.UpdateAPIView):
-    queryset = Role.objects.all()
-    serializer_class = RoleSerializers
+class UpdateMembership(generics.UpdateAPIView):
+    queryset = Membership.objects.all()
+    serializer_class = MembershipSerializers
     permission_classes = [AllowAny,]
-    required_groups = []
-    name = 'role-update'
+    name = 'membership-update'
     lookup_field = "id"
 
-class DeleteRole(generics.DestroyAPIView):
-    queryset = Role.objects.all()
-    serializer_class = RoleSerializers
+class DeleteMembership(generics.DestroyAPIView):
+    queryset = Membership.objects.all()
+    serializer_class = MembershipSerializers
     permission_classes = [AllowAny,]
-    required_groups = []
-    name = 'delete-role'
+    name = 'delete-membership'
     lookup_field = "id"
 
-class CreateRole(APIView):
-    queryset = Role.objects.all()
-    serializer_class = RoleSerializers
+class CreateMembership(generics.CreateAPIView):
+    queryset = Membership.objects.all()
+    serializer_class = MembershipSerializers
     permission_classes = [AllowAny,]
-    required_groups = []
-    name = 'create-role'
-    def post(self, request, *args, **kwargs):
-        pass
+    name = 'create-membership'
