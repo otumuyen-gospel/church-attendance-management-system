@@ -24,4 +24,6 @@ urlpatterns = [
     path('church/', include('church.urls'), name='church'),
     path('household/', include('household.urls'), name='Families'),
     path('role/', include('role.urls'), name='Roles'),
+     path('permissions/', include('permissions.urls'), name='Permissions'),
+    path("membership/",include('membership.urls'), name="Membership"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

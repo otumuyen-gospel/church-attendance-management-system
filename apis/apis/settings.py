@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'church',
     'household',
     'role',
+    'membership',
+    'permissions',
 ]
 
 MIDDLEWARE = [
