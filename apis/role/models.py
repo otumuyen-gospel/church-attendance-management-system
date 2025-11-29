@@ -4,7 +4,7 @@ from django.db import models
 class Role(models.Model):
     name = models.TextField(blank=False, unique=True)
     description = models.TextField(blank=False)
-    permissions = models.JSONField(default=list)
+    permissions = models.TextField(blank=False)
 
     class Meta:
         ordering= ('name',)
