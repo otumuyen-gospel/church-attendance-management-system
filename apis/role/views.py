@@ -13,6 +13,7 @@ from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from rest_framework.views import APIView
+from django.contrib.auth.models import Group, Permission
 
 
 
@@ -43,6 +44,24 @@ class UpdateRole(generics.UpdateAPIView):
     required_groups = []
     name = 'role-update'
     lookup_field = "id"
+    def get_object(self):
+        obj = super().get_object()
+        grpName = obj.name
+        self.updateGroup(name=grpName)
+        return obj
+    def updateGroup(self, name):
+        #delete group if it exist
+        Group.objects.get(name=name).delete()
+        #recreate group
+        newGroupName = self.request.POST.get('name')
+        permissions = self.request.POST.get('permissions')
+        if permissions is not None:
+            newGrp, iscreated = Group.objects.get_or_create(name=newGroupName)
+            lists = permissions.split(',')
+            if iscreated:
+              perms = Permission.objects.filter(codename__in=lists)
+              newGrp.permissions.add(*perms)
+
 
 class DeleteRole(generics.DestroyAPIView):
     queryset = Role.objects.all()
@@ -51,12 +70,28 @@ class DeleteRole(generics.DestroyAPIView):
     required_groups = []
     name = 'delete-role'
     lookup_field = "id"
+    def get_object(self):
+        obj = super().get_object()
+        grpName = obj.name
+        #delete group if it exist
+        Group.objects.get(name=grpName).delete()
+        return obj
 
-class CreateRole(APIView):
+class CreateRole(generics.CreateAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializers
     permission_classes = [AllowAny,]
     required_groups = []
     name = 'create-role'
-    def post(self, request, *args, **kwargs):
-        pass
+    def create(self, request, *args, **kwargs):
+        self.createGroup(request=request)
+        return super().create(request, *args, **kwargs)
+    def createGroup(self, request):
+        name = request.data.get('name')
+        permissions = request.data.get('permissions')
+        if permissions is not None:
+            newGrp, iscreated = Group.objects.get_or_create(name=name)
+            lists = permissions.split(',')
+            if iscreated:
+              perms = Permission.objects.filter(codename__in=lists)
+              newGrp.permissions.add(*perms)
