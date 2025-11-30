@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'role',
     'membership',
     'permissions',
+    'capturemethod',
 ]
 
 MIDDLEWARE = [
