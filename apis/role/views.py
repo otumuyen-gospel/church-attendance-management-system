@@ -14,7 +14,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from django.contrib.auth.models import Group, Permission
-
+from .util import requiredGroups
 
 
 #this generic class will handle GET method to be used by the admin alone
@@ -22,7 +22,7 @@ class RoleList(generics.ListAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializers
     permission_classes = [AllowAny,]
-    required_groups = []
+    required_groups = requiredGroups(permission='view_role')
     name = 'role-list'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -41,7 +41,7 @@ class UpdateRole(generics.UpdateAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializers
     permission_classes = [AllowAny,]
-    required_groups = []
+    required_groups = requiredGroups(permission='change_role')
     name = 'role-update'
     lookup_field = "id"
     def get_object(self):
@@ -67,7 +67,7 @@ class DeleteRole(generics.DestroyAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializers
     permission_classes = [AllowAny,]
-    required_groups = []
+    required_groups = requiredGroups(permission='delete_role')
     name = 'delete-role'
     lookup_field = "id"
     def get_object(self):
@@ -81,7 +81,7 @@ class CreateRole(generics.CreateAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializers
     permission_classes = [AllowAny,]
-    required_groups = []
+    required_groups = requiredGroups(permission='add_role')
     name = 'create-role'
     def create(self, request, *args, **kwargs):
         self.createGroup(request=request)
