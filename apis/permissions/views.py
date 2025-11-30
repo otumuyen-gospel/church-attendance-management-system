@@ -14,7 +14,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from django.contrib.auth.models import Permission
-from ..role.util import requiredGroups
+from role.util import requiredGroups
 
 
 
