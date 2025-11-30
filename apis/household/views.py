@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
 from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
+from ..role.util import requiredGroups
 
 
 
@@ -20,6 +21,7 @@ class HouseHoldList(generics.ListAPIView):
     queryset = HouseHold.objects.all()
     serializer_class = HouseHoldSerializers
     permission_classes = [AllowAny,]
+    required_groups = requiredGroups(permission='view_household')
     name = 'household-list'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -38,6 +40,7 @@ class UpdateHouseHold(generics.UpdateAPIView):
     queryset = HouseHold.objects.all()
     serializer_class = HouseHoldSerializers
     permission_classes = [AllowAny,]
+    required_groups = requiredGroups(permission='change_household')
     name = 'household-update'
     lookup_field = "id"
 
@@ -45,6 +48,7 @@ class DeleteHouseHold(generics.DestroyAPIView):
     queryset = HouseHold.objects.all()
     serializer_class = HouseHoldSerializers
     permission_classes = [AllowAny,]
+    required_groups = requiredGroups(permission='delete_household')
     name = 'delete-household'
     lookup_field = "id"
 
@@ -52,4 +56,5 @@ class CreateHouseHold(generics.CreateAPIView):
     queryset = HouseHold.objects.all()
     serializer_class = HouseHoldSerializers
     permission_classes = [AllowAny,]
+    required_groups = requiredGroups(permission='add_household')
     name = 'create-household'

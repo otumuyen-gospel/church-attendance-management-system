@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
 from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
+from ..role.util import requiredGroups
 
 
 
@@ -20,6 +21,7 @@ class ChurchList(generics.ListAPIView):
     queryset = Church.objects.all()
     serializer_class = ChurchSerializers
     permission_classes = [AllowAny,]
+    required_groups = requiredGroups(permission='view_church')
     name = 'church-list'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -38,6 +40,7 @@ class UpdateChurch(generics.UpdateAPIView):
     queryset = Church.objects.all()
     serializer_class = ChurchSerializers
     permission_classes = [AllowAny,]
+    required_groups = requiredGroups(permission='change_church')
     name = 'church-update'
     lookup_field = "id"
 
@@ -45,6 +48,7 @@ class DeleteChurch(generics.DestroyAPIView):
     queryset = Church.objects.all()
     serializer_class = ChurchSerializers
     permission_classes = [AllowAny,]
+    required_groups = requiredGroups(permission='delete_church')
     name = 'delete-church'
     lookup_field = "id"
 
@@ -52,4 +56,5 @@ class CreateChurch(generics.CreateAPIView):
     queryset = Church.objects.all()
     serializer_class = ChurchSerializers
     permission_classes = [AllowAny,]
+    required_groups = requiredGroups(permission='add_church')
     name = 'create-church'

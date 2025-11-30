@@ -14,6 +14,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from django.contrib.auth.models import Permission
+from ..role.util import requiredGroups
 
 
 
@@ -22,7 +23,7 @@ class PermissionsList(generics.ListAPIView):
     queryset = Permissions.objects.all()
     serializer_class = PermissionsSerializers
     permission_classes = [AllowAny,]
-    required_groups = []
+    required_groups = requiredGroups(permission='view_permissions')
     name = 'permissions-list'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -41,7 +42,7 @@ class DeleteCreateUpdatePermissions(APIView):
     queryset = Permissions.objects.all()  #my stored permissions
     all_permissions = Permission.objects.all() # django's permissions
     permission_classes = [AllowAny,]
-    required_groups = []
+    required_groups = requiredGroups(permission='add_permissions')
     name = 'update-permissions'
     def post(self,request):
         try:
