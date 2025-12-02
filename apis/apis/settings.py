@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'membership',
     'permissions',
     'capturemethod',
+    'ministries',
+    'services',
 ]
 
 MIDDLEWARE = [

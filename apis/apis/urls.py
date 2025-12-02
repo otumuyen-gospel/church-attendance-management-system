@@ -27,4 +27,6 @@ urlpatterns = [
     path('permissions/', include('permissions.urls'), name='Permissions'),
     path('capturemethod/', include('capturemethod.urls'), name='Capture Method'),
     path("membership/",include('membership.urls'), name="Membership"),
+    path("ministries/",include('ministries.urls'), name="Ministries"),
+    path("services/",include('services.urls'), name="Services"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
