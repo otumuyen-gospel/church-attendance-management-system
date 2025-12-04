@@ -52,6 +52,10 @@ INSTALLED_APPS = [
     'capturemethod',
     'ministries',
     'services',
+    'person',
+    'contact',
+    'leadership',
+    'attendance',
 ]
 
 MIDDLEWARE = [
