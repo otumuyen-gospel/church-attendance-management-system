@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     'contact',
     'leadership',
     'attendance',
+    'followup',
+    'faces',
 ]
 
 MIDDLEWARE = [
@@ -134,10 +136,48 @@ USE_I18N = True
 
 USE_TZ = True
 
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # test on your console instead
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'  # Or your email provider's SMTP host
+EMAIL_PORT = 587  # Common port for TLS
+EMAIL_USE_TLS = True  # Use TLS encryption
+EMAIL_HOST_USER = 'e3d38181e49986'  # Your email address
+EMAIL_HOST_PASSWORD = 'ebd29b65df1f21'  # An app-specific password if using Gmail/similar
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER # Optional: Sets the default 'from' address
+
+
+# Actual directory user backups files go to
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "dbbackup": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')
+        },
+     "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+    },
+}
+DBBACKUP_FILENAME_TEMPLATE = 'backup_db_{datetime}.sql'
+DBBACKUP_MEDIA_FILENAME_TEMPLATE = 'backup_file_{datetime}.tar'
+#DBBACKUP_STORAGE_OPTIONS = {'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')}
+#DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'uploads')
+
+# URL used to access the media
+MEDIA_URL = '/media/'
+
+#rest framework settings
+
 REST_FRAMEWORK = {
 'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
-'PAGE_SIZE':10,
-'MAX_PAGE_SIZE':10,
+'PAGE_SIZE':5,
+'MAX_PAGE_SIZE':5,
 'DEFAULT_FILTER_BACKENDS': (
 'django_filters.rest_framework.DjangoFilterBackend',
 'rest_framework.filters.OrderingFilter',
@@ -156,6 +196,9 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=2),
     'UPDATE_LAST_LOGIN': True,
 }
+
+CORS_ALLOWED_ORIGINS = []
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
