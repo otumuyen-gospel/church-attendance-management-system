@@ -35,4 +35,6 @@ urlpatterns = [
     path("attendance/",include('attendance.urls'), name="Attendance"),
     path("follow_up_tasks/",include('followup.urls'), name="Follow Up Tasks"),
     path("user_faces/",include('faces.urls'), name="User Faces"),
+    path("user/",include('user.urls'), name="Users"),
+    path("auth/",include('auth.urls'), name="Auth Pages"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

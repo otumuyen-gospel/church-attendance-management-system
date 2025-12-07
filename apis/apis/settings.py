@@ -33,7 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-     'django.contrib.admin',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'attendance',
     'followup',
     'faces',
+    'user',
+    'auth',
 ]
 
 MIDDLEWARE = [
@@ -171,6 +173,9 @@ MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'uploads')
 
 # URL used to access the media
 MEDIA_URL = '/media/'
+
+#custom user
+AUTH_USER_MODEL = 'user.User'
 
 #rest framework settings
 
