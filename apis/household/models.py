@@ -1,4 +1,5 @@
 from django.db import models
+from auditlog.registry import auditlog
 
 # Create your models here.
 class HouseHold(models.Model):
@@ -13,3 +14,6 @@ class HouseHold(models.Model):
         ordering = ('name',)
     def __str__(self):
         return f"{self.name}"
+
+
+auditlog.register(HouseHold)

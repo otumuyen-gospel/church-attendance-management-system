@@ -5,7 +5,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers.otp import (PasswordResetRequestSerializer, 
                               OTPVerificationSerializer, 
                               PasswordResetSerializer)
-from rest_framework.permissions import AllowAny
+from .serializers.logentry import LogEntrySerializer
+from rest_framework import generics
+from auditlog.models import LogEntry
+from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
+from user.permissions import IsInGroup
 
 
 '''
@@ -68,3 +72,10 @@ class PasswordResetAPIView(APIView):
             {"success": False, "errors": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST,
         )
+    
+class LogEntryViews(generics.ListAPIView):
+    queryset = LogEntry.objects.all().order_by('-timestamp')
+    serializer_class = LogEntrySerializer
+    permission_classes = [AllowAny,]
+    #required_groups = ['admin',]
+    name = 'user-logs'

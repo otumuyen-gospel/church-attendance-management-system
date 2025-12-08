@@ -1,5 +1,5 @@
 from django.db import models
-
+from auditlog.registry import auditlog
 # Create your models here.
 class CaptureMethod(models.Model):
     METHOD_FACE = 'FACE'
@@ -26,3 +26,4 @@ class CaptureMethod(models.Model):
         return f"{self.description}"
     
     
+auditlog.register(CaptureMethod)

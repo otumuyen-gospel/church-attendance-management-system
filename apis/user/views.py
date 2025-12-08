@@ -89,4 +89,3 @@ class DeleteUser(generics.DestroyAPIView):
     required_groups = requiredGroups(permission='delete_user')
     name = 'user-delete'
     lookup_field = "id"
-

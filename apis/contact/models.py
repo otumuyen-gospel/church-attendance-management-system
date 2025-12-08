@@ -1,6 +1,7 @@
 from django.db import models
 from household.models import HouseHold
-from person.models import Person
+from person.models import Person  
+from auditlog.registry import auditlog
 
 # Create your models here.
 class Contact(models.Model):
@@ -39,3 +40,5 @@ class Contact(models.Model):
         ordering = ('marital_status','gender',)
     def __str__(self):
         return f'{self.personId.firstName} {self.personId.lastName}'
+    
+auditlog.register(Contact)

@@ -1,5 +1,6 @@
 from django.db import models
 from person.models import Person
+from auditlog.registry import auditlog
 
 # Create your models here.
 def upload_to(instance, filename):
@@ -11,3 +12,5 @@ class Faces(models.Model):
 
     def __str__(self):
         return f'{self.personId.firstName} {self.personId.lastName}'
+    
+auditlog.register(Faces)

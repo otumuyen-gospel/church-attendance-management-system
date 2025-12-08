@@ -12,6 +12,7 @@ from django.utils import timezone
 from role.models import Role
 from person.models import Person
 from .usermanager import AccountManager
+from auditlog.registry import auditlog
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -48,3 +49,5 @@ class User(AbstractBaseUser, PermissionsMixin):
     def name(self):
         return f"{self.username}"
     
+
+auditlog.register(User)

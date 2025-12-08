@@ -2,6 +2,7 @@ from django.db import models
 from capturemethod.models import CaptureMethod
 from services.models import Services
 from person.models import Person
+from auditlog.registry import auditlog
 
 # Create your models here.
 class Attendance(models.Model):
@@ -18,3 +19,6 @@ class Attendance(models.Model):
         ordering = ('comment',)
     def __str__(self):
         return f'{self.personId.firstName} {self.personId.lastName}'
+    
+
+auditlog.register(Attendance)

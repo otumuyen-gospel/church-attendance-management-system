@@ -1,4 +1,5 @@
 from django.db import models
+from auditlog.registry import auditlog
 
 # Create your models here.
 class Church(models.Model):
@@ -10,3 +11,5 @@ class Church(models.Model):
         ordering = ('name',)
     def __str__(self):
         return f"{self.name}"
+
+auditlog.register(Church)

@@ -18,5 +18,6 @@ urlpatterns = [
     path('reset/request/', PasswordResetRequestAPIView.as_view(), name='request'),
     path('reset/verify/', OTPVerificationAPIView.as_view(), name='verify'),
     path('reset/password/', PasswordResetAPIView.as_view(), name='password'),
+    path('logentry/', LogEntryViews.as_view(), name='Log Entries'),
 
 ]

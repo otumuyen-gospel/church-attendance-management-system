@@ -1,5 +1,5 @@
 from django.db import models
-
+from auditlog.registry import auditlog
 # Create your models here.
 class Role(models.Model):
     name = models.TextField(blank=False, unique=True)
@@ -10,3 +10,5 @@ class Role(models.Model):
         ordering= ('name',)
     def __str__(self):
         return f"{self.name}"
+
+auditlog.register(Role)
