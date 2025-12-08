@@ -26,7 +26,7 @@ from user.permissions import IsInGroup
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializers
-    permission_classes = [IsAuthenticated, IsInGroup,]
+    permission_classes = [IsAuthenticated,IsInGroup,]
     required_groups = requiredGroups(permission='view_user')
     name = 'user-list'
 
@@ -53,33 +53,40 @@ class UpdateUser(generics.UpdateAPIView):
     def get_object(self):
         obj = super().get_object()
         if self.request.user.is_superuser or \
-            obj == self.request.user:
-             self.updateUserGroup(obj)
-             return obj
+             obj == self.request.user:
+            self.updateUserGroup(obj)
+            return obj
+        
         else:
             raise PermissionDenied("You do not have permission to edit this object.")
     
     def updateUserGroup(self,obj):
         user = self.queryset.get(pk=obj.id)
-        if self.request.data['roleId'] != user.roleId__id: #user changed role so update role
+        roleId = self.request.data.get('roleId')
+        if roleId is not None and roleId != user.roleId_id: #user changed role so update role
             group = Group.objects.get(name=user.roleId.name)
-            role = Role.objects.get(pk=self.request.data['roleId'])
+            role = Role.objects.get(pk=roleId)
             new_group = Group.objects.get(name=role.name)
             if group in user.groups.all():
               user.groups.remove(group)
               user.groups.add(new_group)
+              self.updateProps(obj=obj, role=role)
+              
+    def updateProps(self, obj, role):
+        if role.name == 'admin':
+            obj.is_staff = True
+            obj.is_superuser = True
+        else:
+            obj.is_staff = False
+            obj.is_superuser = False
+    
+
 
 class DeleteUser(generics.DestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializers
-    permission_classes = [IsAuthenticated, IsInGroup,]
+    permission_classes = [IsAuthenticated,IsInGroup,]
     required_groups = requiredGroups(permission='delete_user')
     name = 'user-delete'
     lookup_field = "id"
 
-class CreateUser(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializers
-    permission_classes = [IsAuthenticated, IsInGroup,]
-    required_groups = requiredGroups(permission='add_user')
-    name = 'user-create'
