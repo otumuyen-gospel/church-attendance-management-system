@@ -1,6 +1,7 @@
 from django.db import models
 from church.models import Church
 from ministries.models import Ministries
+from auditlog.registry import auditlog
 
 # Create your models here.
 class Services(models.Model):
@@ -35,3 +36,5 @@ class Services(models.Model):
         ordering = ("eventName",)
     def __str__(self):
         return f'{self.eventName}'
+    
+auditlog.register(Services)

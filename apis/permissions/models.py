@@ -1,4 +1,5 @@
 from django.db import models
+from auditlog.registry import auditlog
 
 # Create your models here.
 class Permissions(models.Model):
@@ -8,3 +9,5 @@ class Permissions(models.Model):
         ordering = ('permission',)
     def __str__(self):
         return f'{self.permission}'
+
+auditlog.register(Permissions)

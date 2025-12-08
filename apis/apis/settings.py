@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'dbbackup',
+    'auditlog',
     'church',
     'household',
     'role',
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
     'faces',
     'user',
     'auth',
+    
 ]
 
 MIDDLEWARE = [
@@ -71,9 +73,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'auditlog.middleware.AuditlogMiddleware',
 ]
 
 ROOT_URLCONF = 'apis.urls'
+
+AUDITLOG_LOGENTRY_MODEL = 'auditlog.LogEntry'
 
 TEMPLATES = [
     {

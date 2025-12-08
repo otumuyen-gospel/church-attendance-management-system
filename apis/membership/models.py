@@ -1,5 +1,5 @@
 from django.db import models
-
+from auditlog.registry import auditlog
 # Create your models here.
 class Membership(models.Model):
     status = models.TextField(blank=False)
@@ -9,3 +9,5 @@ class Membership(models.Model):
         ordering = ("status",)
     def __str__(self):
         return f'{self.status}'
+    
+auditlog.register(Membership)

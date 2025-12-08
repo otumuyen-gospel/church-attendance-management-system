@@ -1,6 +1,6 @@
 from django.db import models
 from person.models import Person
-
+from auditlog.registry import auditlog
 # Create your models here.
 class FollowUp(models.Model):
     followeeId = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='followee_set')
@@ -14,3 +14,5 @@ class FollowUp(models.Model):
         ordering = ('isCompleted','dueDate',)
     def __str__(self):
         return f'{self.followeeId.lastName} {self.followeeId.firstName}'
+    
+auditlog.register(FollowUp)

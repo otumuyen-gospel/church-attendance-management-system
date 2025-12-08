@@ -3,6 +3,7 @@ from person.models import Person
 from  church.models import Church
 from role.models import Role
 from ministries.models import Ministries
+from auditlog.registry import auditlog
 
 # Create your models here.
 class Leadership(models.Model):
@@ -16,3 +17,5 @@ class Leadership(models.Model):
 
     def __str__(self):
         return f'{self.roleId.name}'
+
+auditlog.register(Leadership)

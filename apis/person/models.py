@@ -3,6 +3,7 @@ from church.models import Church
 from household.models import HouseHold
 from membership.models import Membership
 from django.utils import timezone
+from auditlog.registry import auditlog
 
 # Create your models here.
 class Person(models.Model):
@@ -29,3 +30,6 @@ class Person(models.Model):
         if (today.month, today.day) < (self.dob.month, self.dob.day):
             age -= 1 #is not yet birthday so subtract 1 from age
         return age
+    
+
+auditlog.register(Person)

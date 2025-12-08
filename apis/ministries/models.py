@@ -1,6 +1,6 @@
 from django.db import models
 from church.models import Church
-
+from auditlog.registry import auditlog
 # Model for church departments and ministries
 class Ministries(models.Model):
     name = models.TextField(unique=True, blank=False)
@@ -11,3 +11,5 @@ class Ministries(models.Model):
         ordering = ('name',)
     def __str__(self):
         return f'{self.name}'
+    
+auditlog.register(Ministries)
