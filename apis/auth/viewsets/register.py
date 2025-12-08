@@ -11,11 +11,7 @@ from role.models import Role
 
 class SignupViewset(ViewSet):
     serializer_class = SignupSerializer
-    '''use AllowAny if everyone can register otherwise
-    in our case(school portal) only an admin can 
-    register a new user
-    '''
-    permission_classes = [IsAuthenticated,IsInGroup,]
+    permission_classes = [IsAuthenticated,IsInGroup]
     required_groups = requiredGroups(permission='add_user')
     http_method_names = ['post']        
     

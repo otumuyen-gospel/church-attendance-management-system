@@ -18,6 +18,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.contrib.auth.models import Group
 from role.util import requiredGroups
+from user.permissions import IsInGroup
 
 
 
@@ -25,7 +26,7 @@ from role.util import requiredGroups
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_user')
     name = 'user-list'
 
@@ -44,7 +45,7 @@ class UserList(generics.ListAPIView):
 class UpdateUser(generics.UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_user')
     name = 'user-update'
     lookup_field = "id"
@@ -71,7 +72,7 @@ class UpdateUser(generics.UpdateAPIView):
 class DeleteUser(generics.DestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_user')
     name = 'user-delete'
     lookup_field = "id"
@@ -79,6 +80,6 @@ class DeleteUser(generics.DestroyAPIView):
 class CreateUser(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_user')
     name = 'user-create'

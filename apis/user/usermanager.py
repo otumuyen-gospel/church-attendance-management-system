@@ -18,14 +18,14 @@ class AccountManager(BaseUserManager):
             raise TypeError('Users must have an email.')
         if password is None:
             raise TypeError('User must have an email.')
-        user = self.model.objects.create()
+        user = self.model(email=email, **kwargs)
         user.username = username
         user.email = email
         user.set_password(password)
         user.roleId =  kwargs.get('roleId')
         user.personId =  kwargs.get('personId')
         user.is_active = True
-        if kwargs.get('role') == 'admin':
+        if user.roleId.name == 'admin':
             user.is_superuser = True
             user.is_staff = True
 

@@ -13,6 +13,7 @@ from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from role.util import requiredGroups
+from user.permissions import IsInGroup
 
 
 
@@ -20,7 +21,7 @@ from role.util import requiredGroups
 class MembershipList(generics.ListAPIView):
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_membership')
     name = 'membership-list'
 
@@ -39,7 +40,7 @@ class MembershipList(generics.ListAPIView):
 class UpdateMembership(generics.UpdateAPIView):
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_membership')
     name = 'membership-update'
     lookup_field = "id"
@@ -47,7 +48,7 @@ class UpdateMembership(generics.UpdateAPIView):
 class DeleteMembership(generics.DestroyAPIView):
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_membership')
     name = 'delete-membership'
     lookup_field = "id"
@@ -55,6 +56,6 @@ class DeleteMembership(generics.DestroyAPIView):
 class CreateMembership(generics.CreateAPIView):
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_membership')
     name = 'create-membership'

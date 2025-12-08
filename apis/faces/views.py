@@ -16,6 +16,7 @@ from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from role.util import requiredGroups
+from user.permissions import IsInGroup
 
 
 
@@ -23,7 +24,7 @@ from role.util import requiredGroups
 class FacesList(generics.ListAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_faces')
     name = 'faces-list'
 
@@ -42,7 +43,7 @@ class FacesList(generics.ListAPIView):
 class UpdateFaces(generics.UpdateAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_faces')
     name = 'faces-update'
     lookup_field = "id"
@@ -50,7 +51,7 @@ class UpdateFaces(generics.UpdateAPIView):
 class DeleteFaces(generics.DestroyAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_faces')
     name = 'delete-faces'
     lookup_field = "id"
@@ -58,6 +59,6 @@ class DeleteFaces(generics.DestroyAPIView):
 class CreateFaces(generics.CreateAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_faces')
     name = 'create-faces'

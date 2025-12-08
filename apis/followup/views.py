@@ -16,6 +16,7 @@ from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from role.util import requiredGroups
+from user.permissions import IsInGroup
 
 
 
@@ -23,7 +24,7 @@ from role.util import requiredGroups
 class FollowUpList(generics.ListAPIView):
     queryset = FollowUp.objects.all()
     serializer_class = FollowUpSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_followup')
     name = 'followup-list'
 
@@ -42,7 +43,7 @@ class FollowUpList(generics.ListAPIView):
 class UpdateFollowUp(generics.UpdateAPIView):
     queryset = FollowUp.objects.all()
     serializer_class = FollowUpSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_followup')
     name = 'followup-update'
     lookup_field = "id"
@@ -50,7 +51,7 @@ class UpdateFollowUp(generics.UpdateAPIView):
 class DeleteFollowUp(generics.DestroyAPIView):
     queryset = FollowUp.objects.all()
     serializer_class = FollowUpSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_followup')
     name = 'delete-followup'
     lookup_field = "id"
@@ -58,6 +59,6 @@ class DeleteFollowUp(generics.DestroyAPIView):
 class CreateFollowUp(generics.CreateAPIView):
     queryset = FollowUp.objects.all()
     serializer_class = FollowUpSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_followup')
     name = 'create-followup'

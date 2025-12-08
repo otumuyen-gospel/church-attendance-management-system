@@ -13,6 +13,7 @@ from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from role.util import requiredGroups
+from user.permissions import IsInGroup
 
 
 
@@ -20,7 +21,7 @@ from role.util import requiredGroups
 class CaptureMethodList(generics.ListAPIView):
     queryset = CaptureMethod.objects.all()
     serializer_class = CaptureMethodSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_capturemethod')
     name = 'capturemethod-list'
 
@@ -39,7 +40,7 @@ class CaptureMethodList(generics.ListAPIView):
 class UpdateCaptureMethod(generics.UpdateAPIView):
     queryset = CaptureMethod.objects.all()
     serializer_class = CaptureMethodSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_capturemethod')
     name = 'capturemethod-update'
     lookup_field = "id"
@@ -47,7 +48,7 @@ class UpdateCaptureMethod(generics.UpdateAPIView):
 class DeleteCaptureMethod(generics.DestroyAPIView):
     queryset = CaptureMethod.objects.all()
     serializer_class = CaptureMethodSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_capturemethod')
     name = 'delete-capturemethod'
     lookup_field = "id"
@@ -55,6 +56,6 @@ class DeleteCaptureMethod(generics.DestroyAPIView):
 class CreateCaptureMethod(generics.CreateAPIView):
     queryset = CaptureMethod.objects.all()
     serializer_class = CaptureMethodSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_capturemethod')
     name = 'create-capturemethod'

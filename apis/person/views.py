@@ -13,6 +13,7 @@ from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from role.util import requiredGroups
+from user.permissions import IsInGroup
 
 
 
@@ -20,7 +21,7 @@ from role.util import requiredGroups
 class PersonList(generics.ListAPIView):
     queryset = Person.objects.all()
     serializer_class = PersonSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_person')
     name = 'person-list'
 
@@ -45,7 +46,7 @@ class PersonList(generics.ListAPIView):
 class UpdatePerson(generics.UpdateAPIView):
     queryset = Person.objects.all()
     serializer_class = PersonSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_person')
     name = 'person-update'
     lookup_field = "id"
@@ -53,7 +54,7 @@ class UpdatePerson(generics.UpdateAPIView):
 class DeletePerson(generics.DestroyAPIView):
     queryset = Person.objects.all()
     serializer_class = PersonSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_person')
     name = 'person-delete'
     lookup_field = "id"
@@ -61,6 +62,6 @@ class DeletePerson(generics.DestroyAPIView):
 class CreatePerson(generics.CreateAPIView):
     queryset = Person.objects.all()
     serializer_class = PersonSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_person')
     name = 'person-create'
