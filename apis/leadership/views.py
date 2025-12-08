@@ -13,6 +13,7 @@ from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from role.util import requiredGroups
+from user.permissions import IsInGroup
 
 
 
@@ -20,7 +21,7 @@ from role.util import requiredGroups
 class LeadershipList(generics.ListAPIView):
     queryset = Leadership.objects.all()
     serializer_class = LeadershipSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_leadership')
     name = 'leadership-list'
 
@@ -39,7 +40,7 @@ class LeadershipList(generics.ListAPIView):
 class UpdateLeadership(generics.UpdateAPIView):
     queryset = Leadership.objects.all()
     serializer_class = LeadershipSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_leadership')
     name = 'leadership-update'
     lookup_field = "id"
@@ -47,7 +48,7 @@ class UpdateLeadership(generics.UpdateAPIView):
 class DeleteLeadership(generics.DestroyAPIView):
     queryset = Leadership.objects.all()
     serializer_class = LeadershipSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_leadership')
     name = 'delete-leadership'
     lookup_field = "id"
@@ -55,6 +56,6 @@ class DeleteLeadership(generics.DestroyAPIView):
 class CreateLeadership(generics.CreateAPIView):
     queryset = Leadership.objects.all()
     serializer_class = LeadershipSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_leadership')
     name = 'create-leadership'

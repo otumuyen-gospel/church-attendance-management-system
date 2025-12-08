@@ -15,13 +15,14 @@ from django.http import HttpResponse
 from rest_framework.views import APIView
 from django.contrib.auth.models import Group, Permission
 from role.util import requiredGroups
+from user.permissions import IsInGroup
 
 
 #this generic class will handle GET method to be used by the admin alone
 class ServicesList(generics.ListAPIView):
     queryset = Services.objects.all()
     serializer_class = ServicesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_services')
     name = 'services-list'
 
@@ -40,7 +41,7 @@ class ServicesList(generics.ListAPIView):
 class UpdateServices(generics.UpdateAPIView):
     queryset = Services.objects.all()
     serializer_class = ServicesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_services')
     name = 'services-update'
     lookup_field = "id"
@@ -49,7 +50,7 @@ class UpdateServices(generics.UpdateAPIView):
 class DeleteServices(generics.DestroyAPIView):
     queryset = Services.objects.all()
     serializer_class = ServicesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_services')
     name = 'delete-services'
     lookup_field = "id"
@@ -58,7 +59,7 @@ class DeleteServices(generics.DestroyAPIView):
 class CreateServices(generics.CreateAPIView):
     queryset = Services.objects.all()
     serializer_class = ServicesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_services')
     name = 'create-services'
     

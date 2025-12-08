@@ -15,13 +15,14 @@ from django.http import HttpResponse
 from rest_framework.views import APIView
 from django.contrib.auth.models import Group, Permission
 from .util import requiredGroups
+from user.permissions import IsInGroup
 
 
 #this generic class will handle GET method to be used by the admin alone
 class RoleList(generics.ListAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_role')
     name = 'role-list'
 
@@ -40,7 +41,7 @@ class RoleList(generics.ListAPIView):
 class UpdateRole(generics.UpdateAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_role')
     name = 'role-update'
     lookup_field = "id"
@@ -66,7 +67,7 @@ class UpdateRole(generics.UpdateAPIView):
 class DeleteRole(generics.DestroyAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_role')
     name = 'delete-role'
     lookup_field = "id"
@@ -80,7 +81,7 @@ class DeleteRole(generics.DestroyAPIView):
 class CreateRole(generics.CreateAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_role')
     name = 'create-role'
     def create(self, request, *args, **kwargs):

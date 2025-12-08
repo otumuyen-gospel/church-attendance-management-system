@@ -13,6 +13,7 @@ from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from role.util import requiredGroups
+from user.permissions import IsInGroup
 
 
 
@@ -20,7 +21,7 @@ from role.util import requiredGroups
 class ContactList(generics.ListAPIView):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_contact')
     name = 'contact-list'
 
@@ -42,7 +43,7 @@ class ContactList(generics.ListAPIView):
 class UpdateContact(generics.UpdateAPIView):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_contact')
     name = 'contact-update'
     lookup_field = "id"
@@ -50,7 +51,7 @@ class UpdateContact(generics.UpdateAPIView):
 class DeleteContact(generics.DestroyAPIView):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_contact')
     name = 'delete-contact'
     lookup_field = "id"
@@ -58,6 +59,6 @@ class DeleteContact(generics.DestroyAPIView):
 class CreateContact(generics.CreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_contact')
     name = 'create-contact'

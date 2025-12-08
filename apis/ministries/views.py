@@ -15,13 +15,14 @@ from django.http import HttpResponse
 from rest_framework.views import APIView
 from django.contrib.auth.models import Group, Permission
 from role.util import requiredGroups
+from user.permissions import IsInGroup
 
 
 #this generic class will handle GET method to be used by the admin alone
 class MinistriesList(generics.ListAPIView):
     queryset = Ministries.objects.all()
     serializer_class = MinistriesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='view_ministries')
     name = 'ministries-list'
 
@@ -40,7 +41,7 @@ class MinistriesList(generics.ListAPIView):
 class UpdateMinistries(generics.UpdateAPIView):
     queryset = Ministries.objects.all()
     serializer_class = MinistriesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_ministries')
     name = 'ministries-update'
     lookup_field = "id"
@@ -49,7 +50,7 @@ class UpdateMinistries(generics.UpdateAPIView):
 class DeleteMinistries(generics.DestroyAPIView):
     queryset = Ministries.objects.all()
     serializer_class = MinistriesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='delete_ministries')
     name = 'delete-ministries'
     lookup_field = "id"
@@ -58,7 +59,7 @@ class DeleteMinistries(generics.DestroyAPIView):
 class CreateMinistries(generics.CreateAPIView):
     queryset = Ministries.objects.all()
     serializer_class = MinistriesSerializers
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_ministries')
     name = 'create-ministries'
     
