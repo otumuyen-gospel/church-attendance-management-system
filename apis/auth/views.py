@@ -76,6 +76,6 @@ class PasswordResetAPIView(APIView):
 class LogEntryViews(generics.ListAPIView):
     queryset = LogEntry.objects.all().order_by('-timestamp')
     serializer_class = LogEntrySerializer
-    permission_classes = [AllowAny,]
+    permission_classes = [IsAuthenticated, IsInGroup]
     #required_groups = ['admin',]
     name = 'user-logs'

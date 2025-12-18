@@ -28,7 +28,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['email','roleId','is_staff','is_active',
                        'is_superuser', 'personId']
     roleId = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
-    personId = models.ForeignKey(Person, on_delete=models.CASCADE)
+    personId = models.ForeignKey(Person, on_delete=models.SET_NULL, null=True, blank=True)
     
 
     otp = models.CharField(max_length=6, blank=True, null=True, default=None)
