@@ -18,8 +18,8 @@ Including another URLconf
 from django.urls import path
 from .views import *
 urlpatterns = [
-    path('views/', CaptureMethodList.as_view(), name=CaptureMethodList.name),
-    path('create/', CreateCaptureMethod.as_view(), name=CreateCaptureMethod.name),
-    path('delete/<int:id>/', DeleteCaptureMethod.as_view(), name=DeleteCaptureMethod.name),
-    path('update/<int:id>/', UpdateCaptureMethod.as_view(), name=UpdateCaptureMethod.name),
+    path('views/', CaptureMethodList.as_view(), name='capturemethod-list'),
+    path('create/', CreateCaptureMethod.as_view(), name='create-capturemethod'),
+    path('delete/<int:id>/', DeleteCaptureMethod.as_view(), name='delete-capturemethod'),
+    path('update/<int:id>/', UpdateCaptureMethod.as_view(), name='capturemethod-update'),
 ]
