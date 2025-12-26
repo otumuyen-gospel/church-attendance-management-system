@@ -17,7 +17,7 @@ class Person(models.Model):
     phone = models.CharField(blank=False, max_length=11)
     email = models.EmailField(blank=False)
     entranceDate = models.DateTimeField(blank=False)
-    faceEncoding = models.BinaryField(null=True, blank=True)
+    faceEncoding = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ('firstName','lastName',)
