@@ -61,6 +61,10 @@ INSTALLED_APPS = [
     'faces',
     'user',
     'auth',
+    'analytics',
+    'report',
+    'backup',
+    'search',
     
 ]
 
