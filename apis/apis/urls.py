@@ -39,6 +39,4 @@ urlpatterns = [
     path("auth/",include('auth.urls'), name="Auth Pages"),
     path("analytics/",include('analytics.urls'), name="Analytics"),
     path("report/",include('report.urls'), name="Reports"),
-    path("backup/",include('backup.urls'), name="Backup"),
-    path("search/",include('search.urls'), name="Search"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

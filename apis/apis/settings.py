@@ -63,8 +63,6 @@ INSTALLED_APPS = [
     'auth',
     'analytics',
     'report',
-    'backup',
-    'search',
     
 ]
 
