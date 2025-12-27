@@ -11,7 +11,7 @@ class Attendance(models.Model):
     captureMethodId = models.ForeignKey(CaptureMethod,  on_delete=models.SET_NULL,
                                    null=True, blank=True)
     
-    checkInTimestamp = models.DateTimeField(blank=False)
+    checkInTimestamp = models.DateTimeField(blank=False, auto_now_add=True)
     checkOutTimestamp = models.DateTimeField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
 
