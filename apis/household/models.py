@@ -3,12 +3,12 @@ from auditlog.registry import auditlog
 
 # Create your models here.
 class HouseHold(models.Model):
-    name = models.TextField(blank=False)
+    name = models.TextField(blank=False, unique=True)
     address = models.TextField(blank=False)
-    count = models.IntegerField(blank=False)
-    head = models.TextField(blank=False)
-    spouse = models.TextField(blank=False)
-    children = models.TextField(blank=False)
+    count = models.IntegerField(blank=True,null=True)
+    head = models.TextField(blank=True,null=True)
+    spouse = models.TextField(blank=True,null=True)
+    children = models.TextField(blank=True,null=True)
 
     class Meta:
         ordering = ('name',)
