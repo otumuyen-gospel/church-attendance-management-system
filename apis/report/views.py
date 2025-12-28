@@ -210,8 +210,8 @@ class HouseHoldList(generics.ListAPIView):
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializers
-    permission_classes = [AllowAny,]
-    #required_groups = requiredGroups(permission='view_user')
+    permission_classes = [IsAuthenticated,IsInGroup]
+    required_groups = requiredGroups(permission='view_user')
     name = 'user-report'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -268,7 +268,7 @@ class UserList(generics.ListAPIView):
              FirstName = None
              role = None
              if(obj.personId.id is not None):
-                 person = Person.objects.get(pk=obj.personId.id)
+                 person = Person.objects.get(id=obj.personId.id)
                  lastName = person.lastName
                  FirstName = person.firstName
             
@@ -289,8 +289,8 @@ class UserList(generics.ListAPIView):
 class PersonList(generics.ListAPIView):
     queryset = Person.objects.all()
     serializer_class = PersonSerializers
-    permission_classes = [AllowAny,]
-    #required_groups = requiredGroups(permission='view_person')
+    permission_classes = [IsAuthenticated,IsInGroup]
+    required_groups = requiredGroups(permission='view_person')
     name = 'person-report'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
