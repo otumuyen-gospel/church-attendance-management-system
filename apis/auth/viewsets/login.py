@@ -5,11 +5,14 @@ from rest_framework import status
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from ..serializers.login import LoginSerializer
 from user.models import User
+from church.models import Church
+from person.models import Person
 from permissions.models import Permissions
 from role.models import Role
 from django.contrib.auth.models import Permission, Group
 from ..serializers.register import SignupSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils import timezone
 
 class LoginViewSet(ViewSet):
     serializer_class = LoginSerializer
@@ -34,7 +37,9 @@ class LoginViewSet(ViewSet):
         if not User.objects.exists():  #if no user exists create the admin user
             self.create_permissions()
             self.create_admin_Role()
-            self.create_admin_user(request)
+            church = self.create_admin_church(request)
+            person = self.create_admin_person(request, church)
+            self.create_admin_user(request, person)
     def create_permissions(self):
         #create the permissions first
             Permissions.objects.all().delete() #clear existing permissions
@@ -52,8 +57,31 @@ class LoginViewSet(ViewSet):
                 newGrp.permissions.add(*perms)
                 admin_role = Role.objects.create(name='admin', description='Administrator role with all permissions',
                                                  permissions=','.join(permissions))
-    
-    def create_admin_user(self, request):
+    def create_admin_church(self, request):
+        if not Church.objects.filter(name=request.data['username']).exists():
+            church = Church.objects.create(
+                name=request.data['username'],
+                address='Admin Church Address',
+                description='Admin Church '
+            )
+            return church
+
+    def create_admin_person(self, request, church):
+        if not Person.objects.filter(firstName=request.data['username']).exists():
+            person = Person.objects.create(
+                firstName=request.data['username'],
+                middleName=request.data['username'],
+                lastName=request.data['username'],
+                phone='01999999999',
+                email=request.data['username'] + "@gmail.com",
+                dob='2000-01-01',
+                entranceDate=timezone.now(),
+                churchId = church.id,
+
+            )
+            return person
+
+    def create_admin_user(self, request, person):
         obj = {
             'username':request.data['username'],
             'password':request.data['password'],
@@ -62,7 +90,7 @@ class LoginViewSet(ViewSet):
             'is_staff':True,
             'roleId':Role.objects.get(name='admin').id,
             'is_active':True,
-            'personId':None,
+            'personId':person.id,
 
         }
         serializer = SignupSerializer(data=obj)
