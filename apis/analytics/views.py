@@ -31,7 +31,7 @@ from django.utils.dateparse import parse_datetime
 
 # Create your views here.
 class Analytics(APIView):
-    permission_classes = [AllowAny,] #only authenticated users can access
+    permission_classes = [IsAuthenticated] #only authenticated users can access
     name = 'Analytics'
     def get(self,request):
         try:
@@ -42,8 +42,9 @@ class Analytics(APIView):
             household = HouseHold.objects.values()
             users = User.objects.values()
             leaderships = Leadership.objects.values()
-            memberships = Membership.objects.values()
-            attendance = Attendance.objects.values()
+            #only todays's attendance
+            today = timezone.localtime(timezone.now()).date()
+            attendance = Attendance.objects.filter(checkInTimestamp__date=today).values()
             df = pd.merge(pd.DataFrame.from_records(persons), 
                           pd.DataFrame.from_records(contacts), left_on='id', 
                           right_on='personId_id', how='outer')
@@ -57,8 +58,8 @@ class Analytics(APIView):
             children = 0
             for row in df.itertuples(index=False):
                 youths  += 1 if (row.marital_status == 'SINGLE' and self.age(row.dob) > 19) else 0
-                teens  += 1 if (row.marital_status == 'SINGLE' and self.age(row.dob) > 12) else 0
-                children  += 1 if (row.marital_status == 'SINGLE' and self.age(row.dob) > 13) else 0
+                teens  += 1 if (row.marital_status == 'SINGLE' and (self.age(row.dob) > 12 and self.age(row.dob) < 19)) else 0
+                children  += 1 if (row.marital_status == 'SINGLE' and self.age(row.dob) < 12) else 0
             total_users = len(users)
             families = len(household)
             total_persons = df.shape[0]
@@ -99,9 +100,9 @@ class Analytics(APIView):
             annual_membership_statistics = filtered_df.groupby(filtered_df['entranceDate'].dt.year).size().to_dict()
 
             # Monthly Membership Growth for the current  year
-            one_year_age = timezone.now() - timedelta(days=1*365)
+            currentYear = timezone.now().year
             df['entranceDate'] = pd.to_datetime(df['entranceDate'])
-            filtered_df = df[df['entranceDate'] >= one_year_age]
+            filtered_df = df[df['entranceDate'].dt.year == currentYear]
             key_mapping = {1:'January', 2:'February', 3:'March',4:'April',5:'May', 6:'June',
                            7:'July', 8:'August',9:'September', 10:'October',11:'November',
                            12:'December'}
@@ -109,13 +110,17 @@ class Analytics(APIView):
             current_year_monthly_membership_statistics = {key_mapping.get(k,k): v for k, v in monthly_membership_statistics.items()}
 
             #membership attendance merge
-            df4 = pd.merge(pd.DataFrame.from_records(memberships), 
-                          pd.DataFrame.from_records(persons), left_on='id', 
-                          right_on='membershipId_id', how='outer').merge(
-                              pd.DataFrame.from_records(attendance), on='personId_id', how='outer')
-            today_attendance = df4.groupby('membershipId_id').transform(lambda x:x[df4['checkInTimestamp'].dt.date ==
-                                                                timezone.now().date()].count()).to_dict()
-            
+            today_attendance = {}
+            if attendance:
+                df4 = pd.merge(pd.DataFrame.from_records(persons), 
+                          pd.DataFrame.from_records(attendance), left_on='id', 
+                          right_on='personId_id', how='inner')
+                if not df4.empty:
+                    memberships = Membership.objects.values('id','status')
+                    memberships = {m['id']:m['status'] for m in memberships}
+                    today_attendance = df4.groupby('membershipId_id').size().to_dict()
+                    today_attendance = {memberships.get(k,k): v for k, v in today_attendance.items()}
+
             return Response({ "statistics": statistics, "membership_status": membership_status, "ethnic_groups": ethnic_groups, 
                              "leadership_status": leadership_status, "annual_growth": annual_membership_statistics, 
                              "current_year_monthly_growth": current_year_monthly_membership_statistics, "today_attendance": today_attendance }, status=200)
@@ -123,7 +128,7 @@ class Analytics(APIView):
             return Response({"error": str(e)}, status=500)
     def age(self, birthdate):
         today = timezone.now().date()
-        dob = timezone.datetime.strptime(birthdate,'%Y-%M-%d:%H:%m:%s')
+        dob = timezone.datetime.strptime(str(birthdate),'%Y-%m-%d')
         age = today.year - dob.year
         if (today.month, today.day) < (dob.month, dob.day):
             age -= 1 #is not yet birthday so subtract 1 from age
