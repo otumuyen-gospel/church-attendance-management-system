@@ -17,7 +17,6 @@ from django.contrib.auth.models import Permission
 from person.models import Person
 from contact.models import Contact
 from household.models import HouseHold
-from followup.models import FollowUp
 from user.models import User
 from ministries.models import Ministries
 from membership.models import Membership
@@ -38,7 +37,6 @@ class Analytics(APIView):
             # Take statistics of menbers in the various ministries
             persons = Person.objects.values() 
             contacts = Contact.objects.values()
-            followup = FollowUp.objects.values()
             household = HouseHold.objects.values()
             users = User.objects.values()
             leaderships = Leadership.objects.values()
@@ -63,8 +61,6 @@ class Analytics(APIView):
             total_users = len(users)
             families = len(household)
             total_persons = df.shape[0]
-            df2 = pd.DataFrame.from_records(followup)
-            total_followups = df2[(df2['isCompleted'] == False)].shape[0]
             statistics = {
                 "men": men,
                 "women": women,
@@ -74,7 +70,6 @@ class Analytics(APIView):
                 "total_users": total_users,
                 "families": families,
                 "total_persons": total_persons,
-                "total_followups": total_followups
             }
 
             membership = df['membershipId_id'].value_counts()
