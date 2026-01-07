@@ -57,7 +57,6 @@ INSTALLED_APPS = [
     'contact',
     'leadership',
     'attendance',
-    'followup',
     'faces',
     'user',
     'auth',
