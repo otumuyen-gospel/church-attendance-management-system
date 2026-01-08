@@ -19,5 +19,5 @@ from django.urls import path
 from .views import *
 urlpatterns = [
     path('analytics/', Analytics.as_view(), name='analytics'),
-   
+   path('followup-analytics/', FollowupAnalytics.as_view(), name='followup-analytics'),
 ]

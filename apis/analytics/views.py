@@ -129,4 +129,63 @@ class Analytics(APIView):
             age -= 1 #is not yet birthday so subtract 1 from age
         return age
    
-    
+
+class FollowupAnalytics(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    name = 'Followup Analytics'
+    visitor_synonyms = [
+        "guest", "caller", "company", "visitant", "houseguest", "drop-in", "invitee",
+        "friend", "companion", "plus-one", "hanger-on", "tourist", "traveler", "sightseer", 
+        "holidaymaker", "vacationer", "voyager", "tripper", "day-tripper", "globetrotter", 
+        "backpacker", "explorer", "out-of-towner", "wanderer", "wayfarer", "pilgrim", "stranger",
+        "outsider", "newcomer", "alien", "foreigner", "offcomer", "incomer", "interloper", "arrival",
+        "newbie", "greenhorn", "blow-in", "new kid on the block", "attendee", "participant",
+        "spectator", "audience", "listener", "patron", "customer", "client", "new user", "prospect",
+          "crasher", "gatecrasher", "walk-in", "punter", "rubberneck", "drifter",
+            "bum",'visitor', 'new member','new believer', 'new visitor','fresher'
+    ]
+    def get(self, request):
+        try:
+            person = Person.objects.values()
+            #attendance less than or equal to a month ago
+            one_month_ago = timezone.now() - timedelta(days=30)
+            attendance = Attendance.objects.filter(checkInTimestamp__gte=one_month_ago).values()
+
+            #All visitors
+            visitors = []
+            for p in person:
+                if any(Membership.objects.get(id=p['membershipId_id']).status.lower() 
+                       in v for v in self.visitor_synonyms):
+                    visitors.append(p)
+
+            #today's birthday celebrant
+            df = pd.DataFrame.from_records(person)
+            df['dob'] = pd.to_datetime(df['dob'])
+            today = timezone.now().date()
+            today_birthdays = df[
+               (df['dob'].dt.month == (today.month)) & 
+               (df['dob'].dt.day == (today.day))
+            ]
+            if today_birthdays.empty:
+                today_birthdays= []
+            else:
+                #cleanup
+               today_birthdays['householdId_id'].fillna('None',inplace=True)
+               today_birthdays = today_birthdays.to_dict(orient='records')
+            
+            # church absentees for the past one month
+            absentees = []
+            if(attendance):
+                for p in person:
+                    target_key = 'personId_id'
+                    target_value = p['id']
+                    isPresent = any(d.get(target_key) == target_value for d in attendance)
+                    if not isPresent:
+                        absentees.append(p)
+            return Response({"absentees":absentees,
+                             'today_birthday_celebrants':today_birthdays,
+                             'visitors':visitors}, 
+                             status=200)        
+
+        except Exception as e:
+            return Response({"error":str(e)}, status=500)
