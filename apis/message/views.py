@@ -73,12 +73,6 @@ class CreateTextMessage(generics.CreateAPIView):
             message_title = request.data.get('title')
             message_body = request.data.get('detail')
 
-            if not phone_number or not message_title or not message_body:
-                return Response(
-                    {'error': 'recipients, title, and detail are required'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
             sms_service = SMSService()
             result = sms_service.send_generic_sms(
                 phone_number=phone_number,
