@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-o30t*0d4_c-2pq*2@ke$47-xb9@de=r3385@q!ly_8m%&6w=&h'
+SECRET_KEY = os.environ.get('SECRET_KEY','')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -109,12 +109,12 @@ WSGI_APPLICATION = 'apis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'churchDB',
-        'USER': 'gospel',
-        'PASSWORD' : 'Gospel@123',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'ENGINE': os.environ.get('ENGINE',''),
+        'NAME': os.environ.get('NAME',''),
+        'USER': os.environ.get('USER',''),
+        'PASSWORD' : os.environ.get('PASSWORD',''),
+        'HOST': os.environ.get('HOST',''),
+        'PORT': os.environ.get('PORT',''),
     }
 }
 
@@ -152,12 +152,12 @@ USE_TZ = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # test on your console instead
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'  # Or your email provider's SMTP host
-EMAIL_PORT = 587  # Common port for TLS
-EMAIL_USE_TLS = True  # Use TLS encryption
-EMAIL_HOST_USER = 'e3d38181e49986'  # Your email address
-EMAIL_HOST_PASSWORD = 'ebd29b65df1f21'  # An app-specific password if using Gmail/similar
-DEFAULT_FROM_EMAIL = 'noreply@churchattendance.com'  # Set a proper from email
+EMAIL_HOST = os.environ.get('EMAIL_HOST','')  # Or your email provider's SMTP host
+EMAIL_PORT = os.environ.get('EMAIL_PORT','')  # Common port for TLS
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS','')  # Use TLS encryption
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER','')  # Your email address
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD','')  # An app-specific password if using Gmail/similar
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','')  # Set a proper from email
 
 # Site Configuration for Email Links
 SITE_URL = 'http://localhost:8000'  # Change to your production domain in production
