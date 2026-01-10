@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Email{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .email-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .email-header img {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        
+        .email-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .email-content {
+            padding: 40px 30px;
+        }
+        
+        .email-content h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .email-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        .cta-button:hover {
+            background-color: #764ba2;
+        }
+        
+        .email-footer {
+            background-color: #f9f9f9;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+        }
+        
+        .email-footer p {
+            margin: 5px 0;
+        }
+        
+        .divider {
+            height: 2px;
+            background-color: #eee;
+            margin: 20px 0;
+        }
+        
+        .highlight-box {
+            background-color: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        {% block header %}
+        <div class="email-header">
+            {% if logo_url %}
+            <img src="{{ logo_url }}" alt="Logo">
+            {% endif %}
+            <h1>{% block header_title %}Email{% endblock %}</h1>
+        </div>
+        {% endblock %}
+        
+        <div class="email-content">
+            {% block content %}
+            <!-- Content goes here -->
+            {% endblock %}
+        </div>
+        
+        {% block footer %}
+        <div class="email-footer">
+            <p>&copy; {% now "Y" %} Church Attendance Management System. All rights reserved.</p>
+            <p>This is an automated email. Please do not reply to this message.</p>
+        </div>
+        {% endblock %}
+    </div>
+</body>
+</html>

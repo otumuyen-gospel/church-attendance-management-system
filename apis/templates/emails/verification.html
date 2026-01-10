@@ -1,0 +1,21 @@
+{% extends "emails/base_email.html" %}
+
+{% block header_title %}Password Reset OTP{% endblock %}
+
+{% block content %}
+<h2>Hi {{ user_name }},</h2>
+
+<p>Thank you for requesting for password reset with the Church Attendance Management System. To complete your reset, please copy and enter the OTP CODE below thank you:</p>
+
+<h1 style="font-size: 12px; color: #999;">copy the code: <br>
+<code style="color: #666; background: #f5f5f5; padding: 2px 5px;">{{ verification_code }}</code></h1>
+
+<div class="highlight-box">
+    <p><strong>Note:</strong> This code will expire immediately after use for security reasons.</p>
+</div>
+
+<p>If you did not create this account, please ignore this email.</p>
+
+<p>Best regards,<br>
+<strong>Church Attendance System Team</strong></p>
+{% endblock %}

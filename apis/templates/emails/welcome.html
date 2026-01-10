@@ -1,0 +1,28 @@
+{% extends "emails/base_email.html" %}
+
+{% block header_title %}Welcome!{% endblock %}
+
+{% block content %}
+<h2>Hello, {{ user_name }}!</h2>
+
+<p>Welcome to the <strong>{{ church_name }} Attendance Management System</strong>. We're excited to have you on board!</p>
+
+<div class="highlight-box">
+    <p><strong>Your account has been successfully created.</strong></p>
+    <p>You can now access the attendance system to check in for services and view your attendance records.</p>
+</div>
+
+<h2>What You maybe able to Do Depending on your user role and permissions:</h2>
+<ul style="margin-left: 20px; margin-bottom: 15px;">
+   {% for role in roles %}
+     <li>{{role}}</li>
+   {%endfor%}
+</ul>
+
+<div class="divider"></div>
+
+<p>If you have any questions or need assistance, please don't hesitate to reach out to our support team.</p>
+
+<p>Site Administrators,<br>
+<strong>{{ church_name }} Team</strong></p>
+{% endblock %}
