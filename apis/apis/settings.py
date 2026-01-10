@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'auth',
     'analytics',
     'report',
+    'message',
     
 ]
 
@@ -84,7 +85,7 @@ AUDITLOG_LOGENTRY_MODEL = 'auditlog.LogEntry'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -152,7 +153,11 @@ EMAIL_PORT = 587  # Common port for TLS
 EMAIL_USE_TLS = True  # Use TLS encryption
 EMAIL_HOST_USER = 'e3d38181e49986'  # Your email address
 EMAIL_HOST_PASSWORD = 'ebd29b65df1f21'  # An app-specific password if using Gmail/similar
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER # Optional: Sets the default 'from' address
+DEFAULT_FROM_EMAIL = 'noreply@churchattendance.com'  # Set a proper from email
+
+# Site Configuration for Email Links
+SITE_URL = 'http://localhost:8000'  # Change to your production domain in production
+SITE_NAME = 'Church Membership and Attendance Management System'
 
 
 # Actual directory user backups files go to

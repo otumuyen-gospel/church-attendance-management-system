@@ -8,10 +8,13 @@ from django.contrib.auth.models import Group
 from user.permissions import IsInGroup
 from role.util import requiredGroups
 from role.models import Role
+from message import EmailService
+from church.models import Church
+from person.models import Person
 
 class SignupViewset(ViewSet):
     serializer_class = SignupSerializer
-    permission_classes = [IsAuthenticated,IsInGroup]
+    permission_classes = [IsAuthenticated,IsInGroup,]
     required_groups = requiredGroups(permission='add_user')
     http_method_names = ['post']        
     
@@ -35,6 +38,17 @@ class SignupViewset(ViewSet):
             "refresh": str(refresh),
             "access": str(refresh.access_token),
             }
+        
+        
+        # In your user registration view
+        EmailService.send_welcome_email(
+         user_email=request.data['email'],
+         user_name=request.data['username'],
+         church_name=Church.objects.get(id=
+                                        Person.objects.get(id=request.data['personId'])
+                                        .churchId.id).name,
+         roles = role.permissions.split(',')
+        )
         
         return Response({"user": serializer.data,
                          "refresh": res["refresh"],

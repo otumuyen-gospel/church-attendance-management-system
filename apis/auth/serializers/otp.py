@@ -2,6 +2,9 @@ from django.core.mail import send_mail
 from django.utils.timezone import now, timedelta 
 from rest_framework import serializers
 from user.models import User
+from django.urls import reverse
+from message import EmailService
+
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -14,13 +17,14 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
         # Generate OTP and send via email
         user.generate_otp()
-        send_mail(
-            "Password Reset OTP",
-            f"Your OTP for password reset is {user.otp}",
-            "portal@school.com",  # Change this to your email
-            [user.email],
-            fail_silently=False,
+        ### Send Verification Email
+
+        EmailService.send_verification_email(
+           user_email=user.email,
+           user_name=user.username,
+           verification_code=user.otp
         )
+
         return value
 
 
