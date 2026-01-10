@@ -160,6 +160,13 @@ SITE_URL = 'http://localhost:8000'  # Change to your production domain in produc
 SITE_NAME = 'Church Membership and Attendance Management System'
 
 
+# TWILIO SMS CONFIGURATION
+# Get your credentials from https://www.twilio.com/console
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')  # Your Account SID
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')    # Your Auth Token
+TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '') # Your Twilio Phone Number (e.g., +1234567890)
+
+
 # Actual directory user backups files go to
 STORAGES = {
     "default": {
