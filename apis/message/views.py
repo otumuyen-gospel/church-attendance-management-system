@@ -51,7 +51,7 @@ class DeleteMessage(generics.DestroyAPIView):
     name = 'delete-message'
     lookup_field = "id"
 
-class CreateTextMessage(generics.CreateAPIView):
+class SendSMS(generics.CreateAPIView):
     """
     Send SMS message to a single recipient.
     
@@ -86,10 +86,7 @@ class CreateTextMessage(generics.CreateAPIView):
                 message_body=message_body
             )
 
-            if result['success']:
-                return super().create(request, *args, **kwargs)
-            else:
-                return Response(result, status=status.HTTP_400_BAD_REQUEST)
+            return super().create(request, *args, **kwargs)
 
         except ImproperlyConfigured as e:
             return Response(
@@ -104,7 +101,7 @@ class CreateTextMessage(generics.CreateAPIView):
         
         
 
-class CreateEmailMessage(generics.CreateAPIView):
+class sendEmailMSG(generics.CreateAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializers
     permission_classes = [IsAuthenticated,IsInGroup]
@@ -135,19 +132,21 @@ class SendBulkSMS(generics.CreateAPIView):
         "message_body": "Sunday service at 10 AM"
     }
     """
-    permission_classes = [IsAuthenticated, IsInGroup]
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializers
+    permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_message')
     name = 'send-bulk-sms'
     def create(self, request, *args, **kwargs):
         
         try:
-            phone_numbers = request.data.get('recipients')
+            phone_numbers = request.data.get('recipients').split(',')
             message_title = request.data.get('title')
             message_body = request.data.get('detail')
 
             if not phone_numbers or not isinstance(phone_numbers, list):
                 return Response(
-                    {'error': 'recipients must be a list and is required'},
+                    {'error': 'recipients must be a comma-separated string of phone numbers '},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -164,8 +163,7 @@ class SendBulkSMS(generics.CreateAPIView):
                 message_body=full_message
             )
 
-            if result['success']:
-                return super().create(request, *args, **kwargs)
+            return super().create(request, *args, **kwargs)
 
         except ImproperlyConfigured as e:
             return Response(
