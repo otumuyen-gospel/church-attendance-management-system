@@ -6,7 +6,7 @@ class Message(models.Model):
     title = models.TextField(blank=False)
     detail = models.TextField(blank=False)
     date = models.DateTimeField(auto_now_add=True, blank=False)
-    recipients = models.EmailField(blank=False)
+    recipients = models.TextField(blank=False)
     senderId = models.ForeignKey(Person, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
