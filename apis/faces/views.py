@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
 from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter
 from rest_framework.exceptions import PermissionDenied
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 from rest_framework.views import APIView
 from role.util import requiredGroups
 from user.permissions import IsInGroup
@@ -24,8 +24,10 @@ from PIL import Image
 import io
 import hashlib
 import pickle
+from .tasks import generate_face_encoding_async 
 from attendance.models import Attendance
 from capturemethod.models import CaptureMethod
+from person.models import Person
 try:
     import face_recognition
     FACE_RECOGNITION_AVAILABLE = True
@@ -34,17 +36,53 @@ except ImportError:
 from django.core.cache import cache
 from concurrent.futures import ThreadPoolExecutor
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
+
+class FaceFrontendView(APIView):
+    """
+    Serve the face recognition frontend HTML
+    Accessible at /user_faces/frontend/
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        """Return the face recognition HTML frontend"""
+        try:
+            # Get the path to the HTML file
+            html_file_path = os.path.join(
+                os.path.dirname(__file__), 
+                'face_frontend.html'
+            )
+            
+            if os.path.exists(html_file_path):
+                with open(html_file_path, 'r', encoding='utf-8') as f:
+                    html_content = f.read()
+                return HttpResponse(html_content, content_type='text/html')
+            else:
+                return Response(
+                    {
+                        'error': 'Frontend HTML file not found',
+                        'path': html_file_path
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
+            logger.error(f"Error serving frontend: {str(e)}")
+            return Response(
+                {'error': f'Failed to load frontend: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 #this generic class will handle GET method to be used by the admin alone
 class FacesList(generics.ListAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
-    permission_classes = [IsAuthenticated, IsInGroup,]
-    required_groups = requiredGroups(permission='view_faces')
+    permission_classes = [AllowAny]
+   # required_groups = requiredGroups(permission='view_faces')
     name = 'faces-list'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -62,15 +100,21 @@ class FacesList(generics.ListAPIView):
 class UpdateFaces(generics.UpdateAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
-    permission_classes = [IsAuthenticated, IsInGroup,]
+    permission_classes = [IsAuthenticated, IsInGroup]
     required_groups = requiredGroups(permission='change_faces')
     name = 'faces-update'
     lookup_field = "id"
 
+    def perform_update(self, serializer):
+         # Save the instance first
+        instance = serializer.save()
+        # Generate face encoding asynchronously
+        generate_face_encoding_async(instance.id)
+
 class DeleteFaces(generics.DestroyAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
-    permission_classes = [IsAuthenticated, IsInGroup,]
+    permission_classes = [IsAuthenticated, IsInGroup]
     required_groups = requiredGroups(permission='delete_faces')
     name = 'delete-faces'
     lookup_field = "id"
@@ -78,54 +122,16 @@ class DeleteFaces(generics.DestroyAPIView):
 class CreateFaces(generics.CreateAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
-    permission_classes = [IsAuthenticated, IsInGroup,]
+    permission_classes = [IsAuthenticated, IsInGroup]
     required_groups = requiredGroups(permission='add_faces')
     name = 'create-faces'
     
     def perform_create(self, serializer):
         # Save the instance first
         instance = serializer.save()
-        
-        # Generate face embeddings from the image fields
-        embeddings_list = []
-        image_fields = [instance.pics, instance.pics2, instance.pics3]
-        
-        for image_field in image_fields:
-            if image_field:
-                try:
-                    # Read the image file
-                    image_path = image_field.path
-                    img = Image.open(image_path)
-                    
-                    # Resize to a standard size for consistency
-                    img = img.resize((128, 128))
-                    
-                    # Convert to numpy array and normalize
-                    img_array = np.array(img).flatten().astype(np.float32) / 255.0
-                    embeddings_list.append(img_array)
-                except Exception as e:
-                    print(f"Error processing image: {str(e)}")
-                    continue
-        
-        # Combine embeddings (averaging them)
-        if embeddings_list:
-            # Handle different embedding sizes by resizing to average size
-            max_len = max(len(e) for e in embeddings_list)
-            padded_embeddings = []
-            for e in embeddings_list:
-                if len(e) < max_len:
-                    # Pad with zeros if needed
-                    padded = np.pad(e, (0, max_len - len(e)), 'constant')
-                else:
-                    padded = e[:max_len]
-                padded_embeddings.append(padded)
-            
-            combined_embedding = np.mean(padded_embeddings, axis=0)
-            # Convert numpy array to binary format
-            face_encoding = combined_embedding.astype(np.float32).tobytes()
-            # Save the binary encoding
-            instance.faceEncoding = face_encoding
-            instance.save()
+        # Generate face encoding asynchronously
+        generate_face_encoding_async(instance.id)
+       
 
 
 # ============================================================================
@@ -151,8 +157,15 @@ class FaceEncodingCache:
         
         for face in faces:
             try:
+                # Ensure faceEncoding is bytes before unpickling
+                face_encoding = face.faceEncoding
+                if isinstance(face_encoding, str):
+                    # Handle case where encoding was incorrectly stored as string
+                    logger.warning(f"Face {face.id} encoding stored as string, attempting to convert")
+                    face_encoding = face_encoding.encode('latin-1')
+                
                 # Deserialize pickle encoding
-                encoding = pickle.loads(face.faceEncoding)
+                encoding = pickle.loads(face_encoding)
                 encodings_data[face.id] = {
                     'encoding': encoding,
                     'person_id': face.personId.id,
@@ -177,7 +190,69 @@ class FaceRecognitionEngine:
     """Efficient face recognition engine using numpy operations"""
     
     # Tolerance for face comparison (lower = stricter matching)
-    DISTANCE_THRESHOLD = 0.6
+    # Standard face_recognition library uses 0.6, but we use stricter threshold
+    # to reduce false positives (e.g., detecting clothes/patterns as faces)
+    DISTANCE_THRESHOLD = 0.4  # Stricter than default 0.6
+    
+    # Minimum confidence for a face to be considered valid
+    MIN_CONFIDENCE = 0.75
+    
+    @staticmethod
+    def is_valid_face_region(image_array, face_location):
+        """
+        Validate that a detected region is actually a face, not clothing/patterns
+        
+        Args:
+            image_array: Full image as numpy array
+            face_location: tuple of (top, right, bottom, left) pixel coordinates
+            
+        Returns:
+            bool: True if likely a face, False if likely false positive
+        """
+        try:
+            top, right, bottom, left = face_location
+            
+            # Validate location is reasonable
+            height = bottom - top
+            width = right - left
+            
+            if height < 20 or width < 20:
+                return False  # Too small to be a face
+            
+            # Extract face region
+            face_region = image_array[top:bottom, left:right]
+            
+            if len(face_region.shape) == 3:
+                gray = np.mean(face_region, axis=2)
+            else:
+                gray = face_region
+            
+            # Check for reasonable variance (faces have varied lighting)
+            variance = np.var(gray)
+            if variance < 100:  # Too uniform, likely solid color clothing
+                return False
+            
+            # Check for skin tone concentration (rough check)
+            # Typical skin RGB has high R, medium G, low B in normalized space
+            if len(image_array.shape) == 3:
+                r_channel = face_region[:,:,0].mean()
+                g_channel = face_region[:,:,1].mean()
+                b_channel = face_region[:,:,2].mean()
+                
+                # Very rough heuristic: face regions often have R > B
+                # and not overly saturated single colors
+                total = r_channel + g_channel + b_channel
+                if total > 0:
+                    r_ratio = r_channel / total
+                    # If too blue or too monochrome, likely not a face
+                    if r_ratio < 0.25:
+                        return False
+            
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Error validating face region: {str(e)}")
+            return True  # Assume valid if validation fails
     
     @staticmethod
     def _generate_simple_encoding(image_array):
@@ -261,8 +336,16 @@ class FaceRecognitionEngine:
                 if not face_locations:
                     return None, False
                 
-                # Generate encoding for the first detected face
-                face_encodings = face_recognition.face_encodings(image_array, face_locations)
+                # Validate detected face is actually a face, not clothing/patterns
+                valid_faces = [loc for loc in face_locations 
+                              if FaceRecognitionEngine.is_valid_face_region(image_array, loc)]
+                
+                if not valid_faces:
+                    logger.warning(f"Detected {len(face_locations)} faces but all failed validation")
+                    return None, False
+                
+                # Generate encoding for the first valid detected face
+                face_encodings = face_recognition.face_encodings(image_array, valid_faces)
                 
                 if face_encodings:
                     return face_encodings[0], True
@@ -307,7 +390,14 @@ class FaceRecognitionEngine:
             # Compute euclidean distance
             distance = np.linalg.norm(test_encoding - known_encoding)
             
+            # Check if distance is below threshold AND confidence is high enough
             is_match = distance < FaceRecognitionEngine.DISTANCE_THRESHOLD
+            confidence = float(1 - (distance / FaceRecognitionEngine.DISTANCE_THRESHOLD)) if is_match else 0.0
+            
+            # Additional check: only accept if confidence is above minimum
+            if is_match and confidence < FaceRecognitionEngine.MIN_CONFIDENCE:
+                is_match = False
+                confidence = 0.0
             
             matches.append({
                 'face_id': face_id,
@@ -315,8 +405,7 @@ class FaceRecognitionEngine:
                 'person_name': data['person_name'],
                 'distance': float(distance),
                 'is_match': is_match,
-                'confidence': float(1 - (distance / FaceRecognitionEngine.DISTANCE_THRESHOLD))
-                if is_match else 0.0
+                'confidence': confidence
             })
         
         # Sort by distance (closest first)
@@ -351,6 +440,53 @@ class FaceRecognitionEngine:
             logger.error(f"Error processing image stream: {str(e)}")
             return None, False
 
+def mark_attendance(all_matches, request):
+     # first closest match
+            person_data = all_matches[0]
+            person_id = person_data['person_id']
+            
+            # Get the Person instance
+            try:
+                person = Person.objects.get(id=person_id)
+            except Person.DoesNotExist:
+                return Response(
+                    {
+                        'success': False,
+                        'error': f'Person with ID {person_id} not found'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Get service ID from request
+            service_id_value = request.data.get('serviceId') if request.data else None
+            
+            # Create attendance record
+            try:
+                capture_method = CaptureMethod.objects.get(method='FACE')
+            except CaptureMethod.DoesNotExist:
+                logger.warning("FACE capture method not found, creating attendance without it")
+                capture_method = None
+            
+            # Get the Services instance if serviceId is provided
+            services = None
+            if service_id_value:
+                try:
+                    from services.models import Services
+                    services = Services.objects.get(id=service_id_value)
+                except Services.DoesNotExist:
+                    logger.warning(f"Services with ID {service_id_value} not found")
+                    services = None
+            
+            # Only create attendance if we have a services instance (required field)
+            if services:
+                attendance = Attendance.objects.create(
+                    personId=person,
+                    servicesId=services,
+                    comment='Checked in via face recognition',
+                    captureMethodId=capture_method if capture_method else None
+                )
+                attendance.save()
+            attendance.save()
 
 class FaceRecognitionStreamView(APIView):
     """
@@ -359,9 +495,9 @@ class FaceRecognitionStreamView(APIView):
     POST: Stream image and perform face recognition
     Expects multipart/form-data with 'image' field containing image file
     """
-    permission_classes = [IsAuthenticated, IsInGroup]
-    required_groups = requiredGroups(permission='view_faces')
-    
+    permission_classes = [AllowAny]
+    #required_groups = requiredGroups(permission='view_faces')
+
     def post(self, request):
         """
         Perform face recognition on streamed image
@@ -375,8 +511,6 @@ class FaceRecognitionStreamView(APIView):
             "success": true,
         }
         """
-        import time
-        start_time = time.time()
         
         try:
             # Validate request
@@ -439,17 +573,8 @@ class FaceRecognitionStreamView(APIView):
                     {'success': False},
                     status=status.HTTP_404_NOT_FOUND
                 )
-            
-            # first closest match
-            person = all_matches[0]
-            # create attendance
-            attendance = Attendance.objects.create(personId=person['person_id'], 
-                                                   serviceId=request.data.get('serviceId'),
-                                                   comment='Checked in via face recognition',
-                                                   captureMethodId=CaptureMethod.objects.get(method='FACE').id)
-            attendance.save()
-
-
+            # if there are matches mark attendance for the first closest match
+            mark_attendance(all_matches, request)
             return Response({'success': True}, status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -463,151 +588,12 @@ class FaceRecognitionStreamView(APIView):
             )
 
 
-class BatchFaceRecognitionView(APIView):
-    """
-    Batch face recognition for multiple images
-    Processes images in parallel using ThreadPoolExecutor
-    """
-    permission_classes = [IsAuthenticated, IsInGroup]
-    required_groups = requiredGroups(permission='view_faces')
-    
-    def post(self, request):
-        """
-        Perform batch face recognition
-        
-        Request body:
-        - images: Array of image files
-        - serviceId:service identifier
-        
-        Response:
-        {
-            "success": true,
-        }
-        """
-        
-        try:
-            image_files = request.FILES.getlist('images')
-            
-            if not image_files:
-                return Response(
-                    {
-                        'success': False,
-                        'error': 'No images provided'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Load encodings once
-            known_encodings = FaceEncodingCache.load_all_encodings()
-            
-            results = []
-            failed_count = 0
-            
-            # Process images in parallel
-            with ThreadPoolExecutor(max_workers=4) as executor:
-                futures = []
-                for idx, image_file in enumerate(image_files):
-                    future = executor.submit(
-                        self._process_single_image,
-                        idx,
-                        image_file,
-                        known_encodings,
-                        request
-                    )
-                    futures.append(future)
-                
-                for future in futures:
-                    result = future.result()
-                    if result['success']:
-                        results.append(result)
-                    else:
-                        failed_count += 1
-            
-            
-            return Response({
-                'success': True,
-                'total_images': len(image_files),
-                'processed': len(results),
-                'failed': failed_count,
-                'results': results,
-            }, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            logger.error(f"Error in batch face recognition: {str(e)}")
-            return Response(
-                {
-                    'success': False,
-                    'error': f'Batch processing error: {str(e)}'
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    @staticmethod
-    def _process_single_image(idx, image_file, known_encodings, request):
-        """Process a single image and return results"""
-        try:
-            image_bytes = image_file.read()
-            
-            # Process image
-            image_array, success = FaceRecognitionEngine.process_image_stream(image_bytes)
-            if not success:
-                return {
-                    'success': False,
-                    'index': idx,
-                    'filename': image_file.name,
-                    'error': 'Failed to process image'
-                }
-            
-            # Generate encoding
-            test_encoding, success = FaceRecognitionEngine.generate_face_encoding(image_array)
-            if not success:
-                return {
-                    'success': False,
-                    'index': idx,
-                    'filename': image_file.name,
-                    'error': 'No face detected'
-                }
-            
-            # Compare faces
-            matches = FaceRecognitionEngine.compare_faces_efficient(
-                test_encoding,
-                known_encodings
-            )
-            
-            # first closest match
-            if matches:
-               person = matches[0]
-               # create attendance
-               attendance = Attendance.objects.create(personId=person['person_id'], 
-                                                   serviceId=request.data.get('serviceId'),
-                                                   comment='Checked in via face recognition',
-                                                   captureMethodId=CaptureMethod.objects.get(method='FACE').id)
-               attendance.save()
-
-            
-            return {
-                'success': True,
-                'index': idx,
-                'filename': image_file.name,
-                'top_match': matches[0] if matches else None,
-                'matches_found': len([m for m in matches if m['is_match']])
-            }
-            
-        except Exception as e:
-            logger.error(f"Error processing image {idx}: {str(e)}")
-            return {
-                'success': False,
-                'index': idx,
-                'filename': getattr(image_file, 'name', 'unknown'),
-                'error': str(e)
-            }
-
 
 class CacheManagementView(APIView):
     """
     Manage face encoding cache
     """
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated,IsAdminUser]
     
     def post(self, request):
         """

@@ -16,4 +16,5 @@ class Faces(models.Model):
     def __str__(self):
         return f'{self.personId.firstName} {self.personId.lastName}'
     
-auditlog.register(Faces)
+# Register with auditlog, excluding the binary field
+auditlog.register(Faces, exclude_fields=['faceEncoding'])

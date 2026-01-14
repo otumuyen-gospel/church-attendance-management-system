@@ -27,7 +27,7 @@ class FacesAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Face Encoding', {
-            'fields': ('faceEncoding', 'encoding_info'),
+            'fields': ('encoding_info',),
             'classes': ('collapse',)
         }),
     )

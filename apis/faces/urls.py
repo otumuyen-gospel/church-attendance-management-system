@@ -17,12 +17,16 @@ Including another URLconf
 
 from django.urls import path
 from .views import *
+'''
+ Each time a new faces is uploaded or an existing one is updated, admin should 
+ remember to cache the face encodings again using the cache management endpoint.
+'''
 urlpatterns = [
+    path('frontend/', FaceFrontendView.as_view(), name='face-frontend'),
     path('views/', FacesList.as_view(), name='faces-list'),
     path('upload/', CreateFaces.as_view(), name='create-faces'),
     path('delete/<int:id>/', DeleteFaces.as_view(), name='delete-faces'),
     path('update/<int:id>/', UpdateFaces.as_view(), name='faces-update'),
-    path('recognize/', FaceRecognitionStreamView.as_view(), name='face-recognize'),
-    path('batch-recognize/', BatchFaceRecognitionView.as_view(), name='batch-recognize'),
+    path('recognition/', FaceRecognitionStreamView.as_view(), name='face-recognize'),
     path('cache/', CacheManagementView.as_view(), name='cache-management'),
 ]

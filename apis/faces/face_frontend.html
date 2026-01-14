@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition - Attendance System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #video {
+            width: 100%;
+            height: auto;
+            display: block;
+            transform: scaleX(-1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e8e8e8;
+            border-color: #999;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #ee5a52;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .settings {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .setting-group {
+            margin-bottom: 15px;
+        }
+
+        .setting-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .setting-group input,
+        .setting-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .setting-group input:focus,
+        .setting-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .status {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ddd;
+        }
+
+        .status.success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .status-text {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .status-details {
+            font-size: 12px;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .results {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item.recognized {
+            border-left-color: #28a745;
+        }
+
+        .result-item.unrecognized {
+            border-left-color: #dc3545;
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .result-match {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .result-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .stream-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #28a745;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .stream-indicator.stopped {
+            background: #dc3545;
+            animation: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Face Recognition Attendance</h1>
+            <p>Real-time face detection and attendance marking system</p>
+            <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffc107;">
+                <strong>⚠️ Important:</strong> Camera access requires HTTPS or localhost. 
+                <a href="https://github.com/yourusername/repo#setup-https" style="color: #0066cc; text-decoration: none;">
+                    See setup instructions
+                </a>
+            </div>
+        </div>
+
+        <!-- Video Stream -->
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn btn-primary" id="startBtn">
+                <span class="stream-indicator stopped" id="indicator"></span>Start Camera
+            </button>
+            <button class="btn btn-secondary" id="captureBtn" disabled>Take Photo</button>
+            <button class="btn btn-secondary" id="switchCameraBtn" disabled>Switch Camera</button>
+            <button class="btn btn-danger" id="stopBtn" disabled>Stop Camera</button>
+        </div>
+
+        <!-- Settings -->
+        <div class="settings">
+            <div class="setting-group">
+                <label for="serviceId">Service ID (Optional)</label>
+                <input 
+                    type="text" 
+                    id="serviceId" 
+                    placeholder="e.g., sunday-service-01"
+                    value=""
+                >
+            </div>
+            <div class="setting-group">
+                <label for="captureInterval">Capture Interval (ms)</label>
+                <input 
+                    type="number" 
+                    id="captureInterval" 
+                    min="100" 
+                    max="5000" 
+                    step="100"
+                    value="1500"
+                >
+            </div>
+            <div class="setting-group">
+                <label>Camera Mode</label>
+                <select id="cameraMode" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    <option value="user">Front Camera (Selfie)</option>
+                    <option value="environment">Back Camera (Environment)</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="apiUrl">API Base URL</label>
+                <input 
+                    type="text" 
+                    id="apiUrl" 
+                    placeholder="http://192.168.x.x:8000"
+                    value=""
+                >
+                <small style="color: #999; margin-top: 5px; display: block;">
+                    Enter your server's IP address. Example: http://192.168.1.100:8000
+                </small>
+            </div>
+            <div class="setting-group">
+                <label>
+                    <input type="checkbox" id="autoCapture" checked>
+                    Auto-capture (continuous recognition)
+                </label>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="recognizedCount">0</div>
+                <div class="stat-label">Recognized</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Total Captures</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="successRate">0%</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="status info" id="status" style="display: none;">
+            <div class="status-text" id="statusText">Ready</div>
+            <div class="status-details" id="statusDetails"></div>
+        </div>
+
+        <!-- Results -->
+        <div>
+            <h3 style="margin-bottom: 15px; color: #333;">Recent Results</h3>
+            <div class="results" id="results">
+                <div style="color: #999; text-align: center; padding: 20px;">
+                    No results yet. Start the camera and begin capturing.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FaceRecognitionApp {
+            constructor() {
+                this.video = document.getElementById('video');
+                
+                // Ensure video element exists
+                if (!this.video) {
+                    throw new Error('Video element not found in HTML');
+                }
+
+                this.startBtn = document.getElementById('startBtn');
+                this.captureBtn = document.getElementById('captureBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                
+                if (!this.startBtn || !this.captureBtn || !this.stopBtn) {
+                    throw new Error('Control buttons not found in HTML');
+                }
+
+                this.statusElement = document.getElementById('status');
+                this.statusText = document.getElementById('statusText');
+                this.statusDetails = document.getElementById('statusDetails');
+                this.resultsContainer = document.getElementById('results');
+                this.indicator = document.getElementById('indicator');
+                this.resultsHistory = [];
+                this.stats = {
+                    recognized: 0,
+                    total: 0
+                };
+
+                this.stream = null;
+                this.isStreaming = false;
+                this.captureInterval = null;
+                this.isCapturing = false;
+
+                this.setupEventListeners();
+                this.loadSettings();
+            }
+
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startCamera());
+                this.captureBtn.addEventListener('click', () => this.captureFrame());
+                this.stopBtn.addEventListener('click', () => this.stopCamera());
+                document.getElementById('switchCameraBtn').addEventListener('click', () => this.switchCamera());
+                
+                document.getElementById('autoCapture').addEventListener('change', (e) => {
+                    if (this.isStreaming) {
+                        if (e.target.checked) {
+                            this.startAutocapture();
+                        } else {
+                            this.stopAutocapture();
+                        }
+                    }
+                });
+
+                document.getElementById('captureInterval').addEventListener('change', (e) => {
+                    if (this.captureInterval && document.getElementById('autoCapture').checked) {
+                        this.stopAutocapture();
+                        this.startAutocapture();
+                    }
+                });
+
+                document.getElementById('apiUrl').addEventListener('change', (e) => {
+                    localStorage.setItem('apiUrl', e.target.value);
+                });
+
+                document.getElementById('serviceId').addEventListener('change', (e) => {
+                    localStorage.setItem('serviceId', e.target.value);
+                });
+            }
+
+            loadSettings() {
+                const savedUrl = localStorage.getItem('apiUrl');
+                const savedServiceId = localStorage.getItem('serviceId');
+                
+                // If no saved URL, try to use current window location or suggest localhost
+                if (savedUrl) {
+                    document.getElementById('apiUrl').value = savedUrl;
+                } else {
+                    // Try to detect the server URL
+                    const protocol = window.location.protocol;
+                    const hostname = window.location.hostname;
+                    const port = window.location.port ? ':' + window.location.port : ':8000';
+                    
+                    // If running on localhost, still set it but user should change for other devices
+                    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                        document.getElementById('apiUrl').value = protocol + '//localhost:8000';
+                    } else {
+                        document.getElementById('apiUrl').value = protocol + '//' + hostname + port;
+                    }
+                }
+                if (savedServiceId) {
+                    document.getElementById('serviceId').value = savedServiceId;
+                }
+            }
+
+            async startCamera() {
+                try {
+                    // Check if mediaDevices is available
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        throw new Error('Camera access not supported in this browser or context. Use HTTPS or localhost.');
+                    }
+
+                    this.setStatus('info', 'Requesting camera access...', '');
+                    
+                    // Get selected camera mode
+                    const cameraMode = document.getElementById('cameraMode').value || 'user';
+                    
+                    const constraints = {
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: cameraMode
+                        },
+                        audio: false
+                    };
+
+                    try {
+                        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    } catch (cameraError) {
+                        // If camera with ideal constraints fails, try with basic constraints
+                        if (cameraError.name === 'NotAllowedError') {
+                            throw new Error('Camera permission denied. Please allow camera access and refresh the page.');
+                        } else if (cameraError.name === 'NotFoundError') {
+                            throw new Error('No camera found on this device.');
+                        } else if (cameraError.name === 'NotReadableError') {
+                            throw new Error('Camera is in use by another application.');
+                        }
+                        throw cameraError;
+                    }
+
+                    this.video.srcObject = this.stream;
+                    this.isStreaming = true;
+
+                    this.startBtn.disabled = true;
+                    this.captureBtn.disabled = false;
+                    this.stopBtn.disabled = false;
+                    document.getElementById('switchCameraBtn').disabled = false;
+                    this.indicator.classList.remove('stopped');
+
+                    this.setStatus('success', 'Camera started successfully', 'Click "Take Photo" or enable auto-capture');
+
+                    if (document.getElementById('autoCapture').checked) {
+                        this.startAutocapture();
+                    }
+                } catch (error) {
+                    this.setStatus('error', 'Failed to access camera', error.message);
+                    console.error('Camera error:', error);
+                }
+            }
+
+            switchCamera() {
+                if (!this.isStreaming) return;
+                
+                // Stop current stream
+                this.stopCamera();
+                
+                // Toggle camera mode
+                const cameraMode = document.getElementById('cameraMode');
+                cameraMode.value = cameraMode.value === 'user' ? 'environment' : 'user';
+                
+                // Restart with new camera
+                setTimeout(() => this.startCamera(), 500);
+            }
+
+            stopCamera() {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream = null;
+                }
+                this.isStreaming = false;
+                this.stopAutocapture();
+
+                this.startBtn.disabled = false;
+                this.captureBtn.disabled = true;
+                this.stopBtn.disabled = true;
+                document.getElementById('switchCameraBtn').disabled = true;
+                this.indicator.classList.add('stopped');
+            }
+
+            startAutocapture() {
+                if (this.captureInterval) return;
+
+                const interval = parseInt(document.getElementById('captureInterval').value) || 1500;
+                this.captureInterval = setInterval(() => {
+                    if (this.isStreaming && !this.isCapturing) {
+                        this.captureFrame();
+                    }
+                }, interval);
+            }
+
+            stopAutocapture() {
+                if (this.captureInterval) {
+                    clearInterval(this.captureInterval);
+                    this.captureInterval = null;
+                }
+            }
+
+            async captureFrame() {
+                if (!this.isStreaming || this.isCapturing) return;
+
+                try {
+                    this.isCapturing = true;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = this.video.videoWidth;
+                    canvas.height = this.video.videoHeight;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(this.video, 0, 0);
+
+                    canvas.toBlob(async (blob) => {
+                        try {
+                            await this.sendFrameToAPI(blob);
+                        } catch (error) {
+                            console.error('Capture error:', error);
+                            this.setStatus('error', 'Capture failed', error.message);
+                        } finally {
+                            this.isCapturing = false;
+                        }
+                    }, 'image/jpeg', 0.8);
+
+                } catch (error) {
+                    console.error('Capture frame error:', error);
+                    this.setStatus('error', 'Failed to capture frame', error.message);
+                    this.isCapturing = false;
+                }
+            }
+
+            async sendFrameToAPI(imageBlob) {
+                const apiUrl = document.getElementById('apiUrl').value.trim();
+                const serviceId = document.getElementById('serviceId').value.trim();
+                
+                if (!apiUrl) {
+                    this.setStatus('error', 'API URL not configured', 'Please enter the server address');
+                    return;
+                }
+                
+                // Correct endpoint path - /user_faces/ is the app prefix in main urls.py
+                const endpoint = '/user_faces/recognition/';
+                const fullUrl = apiUrl + endpoint;
+
+                const formData = new FormData();
+                formData.append('image', imageBlob, 'frame.jpg');
+                if (serviceId) {
+                    formData.append('serviceId', serviceId);
+                }
+
+                this.setStatus('info', 'Processing image...', '');
+
+                try {
+                    const response = await fetch(fullUrl, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    this.stats.total++;
+                    this.updateStats();
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        
+                        if (response.status === 404) {
+                            this.addResult({
+                                name: 'Unknown Person',
+                                match: 0,
+                                recognized: false
+                            });
+                            this.setStatus('warning', 'Face not recognized', error.error || 'No match found');
+                        } else {
+                            this.setStatus('error', 'API Error', error.error || 'Unknown error');
+                        }
+                        this.stopCamera();
+                        return;
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.stats.recognized++;
+                        this.updateStats();
+                        this.addResult({
+                            name: 'Person Recognized',
+                            match: 'Success',
+                            recognized: true,
+                            status: 'Attendance recorded'
+                        });
+                        this.setStatus('success', 'Person recognized!', 'Attendance has been marked');
+                    } else {
+                        this.addResult({
+                            name: 'Unknown',
+                            match: 0,
+                            recognized: false
+                        });
+                        this.setStatus('warning', 'Not recognized', result.error || 'No face match');
+                        
+                    }
+                    this.stopCamera();
+                } catch (error) {
+                    console.error('API error:', error);
+                    this.setStatus('error', 'API Connection Error', error.message);
+                    this.stopCamera();
+                }
+            }
+
+            addResult(result) {
+                const timestamp = new Date().toLocaleTimeString();
+                this.resultsHistory.unshift({ ...result, timestamp });
+
+                // Keep only last 10 results
+                if (this.resultsHistory.length > 10) {
+                    this.resultsHistory.pop();
+                }
+
+                this.renderResults();
+            }
+
+            renderResults() {
+                if (this.resultsHistory.length === 0) {
+                    this.resultsContainer.innerHTML = `
+                        <div style="color: #999; text-align: center; padding: 20px;">
+                            No results yet. Start the camera and begin capturing.
+                        </div>
+                    `;
+                    return;
+                }
+
+                this.resultsContainer.innerHTML = this.resultsHistory.map(result => `
+                    <div class="result-item ${result.recognized ? 'recognized' : 'unrecognized'}">
+                        <div class="result-name">${result.name}</div>
+                        <div class="result-match">
+                            ${result.recognized ? '✓ Recognized' : '✗ Not recognized'}
+                            ${result.status ? ' - ' + result.status : ''}
+                        </div>
+                        <div class="result-time">${result.timestamp}</div>
+                    </div>
+                `).join('');
+            }
+
+            updateStats() {
+                document.getElementById('recognizedCount').textContent = this.stats.recognized;
+                document.getElementById('totalCount').textContent = this.stats.total;
+                
+                const rate = this.stats.total > 0 
+                    ? Math.round((this.stats.recognized / this.stats.total) * 100)
+                    : 0;
+                document.getElementById('successRate').textContent = rate + '%';
+            }
+
+            setStatus(type, message, details) {
+                this.statusElement.className = 'status ' + type;
+                this.statusElement.style.display = 'block';
+                this.statusText.textContent = message;
+                this.statusDetails.textContent = details || '';
+            }
+        }
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const app = new FaceRecognitionApp();
+                console.log('Face Recognition App initialized successfully');
+                window.faceApp = app; // Make available for debugging
+            } catch (error) {
+                console.error('Failed to initialize app:', error);
+                const statusEl = document.getElementById('status');
+                if (statusEl) {
+                    statusEl.className = 'status error';
+                    statusEl.style.display = 'block';
+                    statusEl.innerHTML = `
+                        <div class="status-text">Initialization Error</div>
+                        <div class="status-details">${error.message}</div>
+                    `;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

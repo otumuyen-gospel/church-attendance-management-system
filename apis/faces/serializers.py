@@ -5,4 +5,5 @@ class FacesSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Faces
-        fields = "__all__"
+        # Exclude binary field to prevent UTF-8 decoding errors
+        exclude = ['faceEncoding']
