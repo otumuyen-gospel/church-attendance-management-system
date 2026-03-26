@@ -1,22 +1,15 @@
 from django.contrib import admin
-from django.utils.html import format_html
-from django.urls import reverse
-from django.http import JsonResponse
-from django.utils.decorators import method_decorator
-from django.views.decorators.http import require_http_methods
 from .models import Faces
-from .tasks import generate_face_encoding_async
-from .views import FaceEncodingCache
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class FacesAdmin(admin.ModelAdmin):
-    list_display = ('person_display', 'has_encoding', 'encoding_status', 'actions_display')
+    list_display = ('person_display', 'pics', 'pics2', 'pics3')
     list_filter = ('personId__firstName', 'personId__lastName')
     search_fields = ('personId__firstName', 'personId__lastName', 'personId__id')
-    readonly_fields = ('encoding_info',)
+
+    def person_display(self, obj):
+        return f'{obj.personId.firstName} {obj.personId.lastName}'
+    person_display.short_description = 'Person'
     
     fieldsets = (
         ('Person Information', {
