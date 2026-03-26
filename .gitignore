@@ -64,10 +64,3 @@ Thumbs.db
 # Backups
 *.bak
 *.backup
-
-#certificates and configs
-generate_cert.py
-run_https.py
-*.bat
-*.ps1
-certs/

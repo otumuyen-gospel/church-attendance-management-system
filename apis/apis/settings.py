@@ -31,7 +31,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY','')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']  # Allow all hosts for development; restrict in production
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
     'rest_framework_simplejwt.token_blacklist',
-    'corsheaders',
     'dbbackup',
     'auditlog',
     'church',
@@ -72,7 +71,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -232,19 +230,6 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=2),
     'UPDATE_LAST_LOGIN': True,
 }
-
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8000',
-    'http://localhost:3000',
-    'http://127.0.0.1:8000',
-    'http://127.0.0.1:3000',
-]
-
-# Allow CORS for all origins in development
-CORS_ALLOW_ALL_ORIGINS = True
-
-# Allow credentials to be included in CORS requests
-CORS_ALLOW_CREDENTIALS = True
 
 
 # Static files (CSS, JavaScript, Images)
