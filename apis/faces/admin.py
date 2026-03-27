@@ -3,7 +3,7 @@ from .models import Faces
 
 
 class FacesAdmin(admin.ModelAdmin):
-    list_display = ('person_display', 'pics', 'pics2', 'pics3')
+    list_display = ('person_display', 'pics')
     list_filter = ('personId__firstName', 'personId__lastName')
     search_fields = ('personId__firstName', 'personId__lastName', 'personId__id')
 
@@ -16,7 +16,7 @@ class FacesAdmin(admin.ModelAdmin):
             'fields': ('personId',)
         }),
         ('Images', {
-            'fields': ('pics', 'pics2', 'pics3'),
+            'fields': ('pics',),
             'classes': ('collapse',)
         }),
         ('Face Encoding', {
