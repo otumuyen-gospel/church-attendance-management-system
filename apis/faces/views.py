@@ -103,7 +103,7 @@ class RecognizeFaceView(generics.GenericAPIView):
             return Response({"message": "No known faces in database(database is empty)"}, status=status.HTTP_404_NOT_FOUND)
 
         # Compare
-        results = face_recognition.compare_faces(known_encodings, unknown_encoding)
+        results = face_recognition.compare_faces(known_encodings, unknown_encoding,tolerance=0.2)
         face_distances = face_recognition.face_distance(known_encodings, unknown_encoding)
 
         best_match_index = np.argmin(face_distances)
