@@ -23,7 +23,7 @@ class Attendance(models.Model):
         # Enforce uniqueness for the combination of 'personId' and attendance date
         constraints = [
             UniqueConstraint(
-                fields=['personId', 'attendanceDate'],
+                fields=['personId', 'attendanceDate','servicesId'],
                 name='unique_person_date_attendance'
             )
         ]

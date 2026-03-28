@@ -59,7 +59,7 @@ class DeleteServices(generics.DestroyAPIView):
 class CreateServices(generics.CreateAPIView):
     queryset = Services.objects.all()
     serializer_class = ServicesSerializers
-    permission_classes = [IsAuthenticated, IsInGroup,]
-    required_groups = requiredGroups(permission='add_services')
+    permission_classes = [AllowAny,]
+    #required_groups = requiredGroups(permission='add_services')
     name = 'create-services'
     
