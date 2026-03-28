@@ -42,8 +42,8 @@ def process_image_encoding(file):
 class FacesList(generics.ListAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
-    permission_classes = [AllowAny]
-    #required_groups = requiredGroups(permission='view_faces')
+    permission_classes = [IsAuthenticated, IsInGroup,]
+    required_groups = requiredGroups(permission='view_faces')
     name = 'faces-list'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -60,8 +60,8 @@ class FacesList(generics.ListAPIView):
 
 class UpdateFaces(generics.GenericAPIView):
     serializer_class = CreateFaceSerializer
-    permission_classes = [AllowAny]
-    #required_groups = requiredGroups(permission='change_faces')
+    permission_classes = [IsAuthenticated, IsInGroup]
+    required_groups = requiredGroups(permission='change_faces')
     name = 'faces-update'
     
     def post(self, request, *args, **kwargs):
@@ -124,8 +124,8 @@ class DeleteFaces(generics.DestroyAPIView):
 
 class CreateFaces(generics.GenericAPIView):
     serializer_class = CreateFaceSerializer
-    permission_classes = [AllowAny]
-    #required_groups = requiredGroups(permission='add_faces')
+    permission_classes = [IsAuthenticated, IsInGroup]
+    required_groups = requiredGroups(permission='add_faces')
     name = 'create-faces'
 
     def post(self, request, *args, **kwargs):
@@ -179,9 +179,9 @@ class CreateFaces(generics.GenericAPIView):
 
 
 class RecognizeFaceView(generics.GenericAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsInGroup]
     serializer_class = RecognizeFaceSerializer
-    #required_groups = requiredGroups(permission='view_faces')
+    required_groups = requiredGroups(permission='view_faces')
 
     def capture_attendance(self, personID, servicesId, faceMatchDistance, match= True):
         try:
