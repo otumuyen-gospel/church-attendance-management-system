@@ -6,7 +6,8 @@ from rest_framework import filters
 from role.util import requiredGroups
 from user.permissions import IsInGroup
 from .models import Faces
-from .serializers import FacesSerializers, RecognizeFaceSerializer
+from person.models import Person
+from .serializers import FacesSerializers, RecognizeFaceSerializer, CreateFaceSerializer
 
 import face_recognition
 import numpy as np
@@ -22,6 +23,7 @@ class FacesList(generics.ListAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
     permission_classes = [AllowAny]
+    #required_groups = requiredGroups(permission='view_faces')
     name = 'faces-list'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -36,13 +38,54 @@ class FacesList(generics.ListAPIView):
     ordering_fields = ('personId__id',)
 
 
-class UpdateFaces(generics.UpdateAPIView):
-    queryset = Faces.objects.all()
-    serializer_class = FacesSerializers
-    permission_classes = [IsAuthenticated, IsInGroup]
-    required_groups = requiredGroups(permission='change_faces')
+class UpdateFaces(generics.GenericAPIView):
+    serializer_class = CreateFaceSerializer
+    permission_classes = [AllowAny]
+    #required_groups = requiredGroups(permission='change_faces')
     name = 'faces-update'
-    lookup_field = "id"
+    
+    def post(self, request, *args, **kwargs):
+        #Get Person
+        personId = Person.objects.get(id=request.data.get('personId'))
+        if not personId:
+            return Response({"error": "Person with the provided ID does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        face = Faces.objects.filter(personId=personId)
+        if not face.exists():
+            return Response({"error": "No existing face record found for this person."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Load and encode
+        frontview = self.request.FILES.get('frontview')
+        leftsideview = self.request.FILES.get('leftsideview')
+        rightsideview = self.request.FILES.get('rightsideview')
+        smileview = self.request.FILES.get('smileview')
+        frownview = self.request.FILES.get('frownview')
+        image_files = [frontview, leftsideview, rightsideview, smileview, frownview]
+        if not all(image_files):
+            return Response({"error": "All 5 images must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+        all_encodings = []
+        for file in image_files:
+            img = face_recognition.load_image_file(file)
+            encodings = face_recognition.face_encodings(img, num_jitters=10)
+            if encodings:
+                all_encodings.append(encodings[0])
+
+        if not all_encodings:
+            return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Average the encodings for better accuracy
+        avg_encoding = np.mean(all_encodings, axis=0).tolist()
+        #update existing face record for the person
+        face = face.first()
+        face.encoding=avg_encoding
+        face.pics=frontview
+        face.save()
+        
+        return Response({
+            "message": f"Face updated for {personId.firstName} {personId.lastName}",
+            "encodings": avg_encoding
+        }, status=status.HTTP_201_CREATED)
 
 
 class DeleteFaces(generics.DestroyAPIView):
@@ -54,25 +97,55 @@ class DeleteFaces(generics.DestroyAPIView):
     lookup_field = "id"
 
 
-class CreateFaces(generics.CreateAPIView):
-    queryset = Faces.objects.all()
-    serializer_class = FacesSerializers
+class CreateFaces(generics.GenericAPIView):
+    serializer_class = CreateFaceSerializer
     permission_classes = [AllowAny]
     #required_groups = requiredGroups(permission='add_faces')
     name = 'create-faces'
 
-    def perform_create(self, serializer):
+    def post(self, request, *args, **kwargs):
+        #Get Person
+        personId = Person.objects.get(id=request.data.get('personId'))
+        if not personId:
+            return Response({"error": "Person with the provided ID does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        if Faces.objects.filter(personId=personId).exists():
+            return Response({"error": "A face record already exists for this person."}, status=status.HTTP_400_BAD_REQUEST)
+
         # Load and encode
-        img = face_recognition.load_image_file(self.request.FILES['pics'])
-        encodings = face_recognition.face_encodings(img)
-
-        if not encodings:
-            return Response({"error": "No face detected in image"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Save encoding as list (JSON serializable)
-        encodings = encodings[0].tolist()
+        frontview = self.request.FILES.get('frontview')
+        leftsideview = self.request.FILES.get('leftsideview')
+        rightsideview = self.request.FILES.get('rightsideview')
+        smileview = self.request.FILES.get('smileview')
+        frownview = self.request.FILES.get('frownview')
+        image_files = [frontview, leftsideview, rightsideview, smileview, frownview]
+        if not all(image_files):
+            return Response({"error": "All 5 images must be provided"}, status=status.HTTP_400_BAD_REQUEST)
         
-        serializer.save(encoding=encodings)
+
+        all_encodings = []
+        for file in image_files:
+            img = face_recognition.load_image_file(file)
+            encodings = face_recognition.face_encodings(img, num_jitters=10)
+            if encodings:
+                all_encodings.append(encodings[0])
+
+        if not all_encodings:
+            return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Average the encodings for better accuracy
+        avg_encoding = np.mean(all_encodings, axis=0).tolist()
+        #create new face record for the person
+        Faces.objects.create(
+            personId=personId,
+            encoding=avg_encoding,
+            pics=frontview
+        )
+
+        return Response({
+            "message": f"Face registered for {personId.firstName} {personId.lastName}",
+            "encodings": avg_encoding
+        }, status=status.HTTP_201_CREATED)
+
 
 
 class RecognizeFaceView(generics.GenericAPIView):
@@ -87,7 +160,7 @@ class RecognizeFaceView(generics.GenericAPIView):
 
         # Load uploaded image
         img = face_recognition.load_image_file(file)
-        unknown_encodings = face_recognition.face_encodings(img)
+        unknown_encodings = face_recognition.face_encodings(img, num_jitters=10)
 
         if not unknown_encodings:
             return Response({"message": "Please upload an image with a face"}, status=status.HTTP_404_NOT_FOUND)
@@ -103,7 +176,7 @@ class RecognizeFaceView(generics.GenericAPIView):
             return Response({"message": "No known faces in database(database is empty)"}, status=status.HTTP_404_NOT_FOUND)
 
         # Compare
-        results = face_recognition.compare_faces(known_encodings, unknown_encoding,tolerance=0.2)
+        results = face_recognition.compare_faces(known_encodings, unknown_encoding,tolerance=0.4)
         face_distances = face_recognition.face_distance(known_encodings, unknown_encoding)
 
         best_match_index = np.argmin(face_distances)
