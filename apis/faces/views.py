@@ -12,16 +12,31 @@ from .serializers import FacesSerializers, RecognizeFaceSerializer, CreateFaceSe
 import face_recognition
 import numpy as np
 
+import concurrent.futures
+import io
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-import io
-from PIL import Image
 
+from .cache import FacesCache
 from attendance.models import Attendance
-from capturemethod.models import CaptureMethod
 from services.models import Services
+from capturemethod.models import CaptureMethod
 from django.utils import timezone
+
+
+def process_image_encoding(file):
+    """
+    Process a single image file to get face encoding.
+    Returns the encoding or None if no face found.
+    """
+    try:
+        img = face_recognition.load_image_file(file)
+        encodings = face_recognition.face_encodings(img, num_jitters=10)
+        return encodings[0] if encodings else None
+    except Exception:
+        return None
 
 
 class FacesList(generics.ListAPIView):
@@ -69,12 +84,14 @@ class UpdateFaces(generics.GenericAPIView):
             return Response({"error": "All 5 images must be provided"}, status=status.HTTP_400_BAD_REQUEST)
         
 
-        all_encodings = []
-        for file in image_files:
-            img = face_recognition.load_image_file(file)
-            encodings = face_recognition.face_encodings(img, num_jitters=10)
-            if encodings:
-                all_encodings.append(encodings[0])
+        # Process images in parallel for better performance
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_file = {executor.submit(process_image_encoding, file): file for file in image_files}
+            all_encodings = []
+            for future in concurrent.futures.as_completed(future_to_file):
+                encoding = future.result()
+                if encoding is not None:
+                    all_encodings.append(encoding)
 
         if not all_encodings:
             return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
@@ -86,6 +103,9 @@ class UpdateFaces(generics.GenericAPIView):
         face.encoding=avg_encoding
         face.pics=frontview
         face.save()
+
+        # Invalidate cache to refresh with updated face
+        FacesCache.invalidate_cache()
         
         return Response({
             "message": f"Face updated for {personId.firstName} {personId.lastName}",
@@ -127,12 +147,14 @@ class CreateFaces(generics.GenericAPIView):
             return Response({"error": "All 5 images must be provided"}, status=status.HTTP_400_BAD_REQUEST)
         
 
-        all_encodings = []
-        for file in image_files:
-            img = face_recognition.load_image_file(file)
-            encodings = face_recognition.face_encodings(img, num_jitters=10)
-            if encodings:
-                all_encodings.append(encodings[0])
+        # Process images in parallel for better performance
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_file = {executor.submit(process_image_encoding, file): file for file in image_files}
+            all_encodings = []
+            for future in concurrent.futures.as_completed(future_to_file):
+                encoding = future.result()
+                if encoding is not None:
+                    all_encodings.append(encoding)
 
         if not all_encodings:
             return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
@@ -145,6 +167,9 @@ class CreateFaces(generics.GenericAPIView):
             encoding=avg_encoding,
             pics=frontview
         )
+
+        # Invalidate cache to refresh with new face
+        FacesCache.invalidate_cache()
 
         return Response({
             "message": f"Face registered for {personId.firstName} {personId.lastName}",
@@ -212,13 +237,13 @@ class RecognizeFaceView(generics.GenericAPIView):
 
         unknown_encoding = unknown_encodings[0]
 
-        # Get all known faces from DB
-        known_faces = Faces.objects.all()
-        known_encodings = [np.array(face.encoding) for face in known_faces if face.encoding]
-        known_names = [f"{face.personId.firstName} {face.personId.lastName}" for face in known_faces]
+        # Get all known faces from cache
+        known_encodings = FacesCache.get_all_encodings()
+        known_names = FacesCache.get_face_names()
+        known_face_ids = FacesCache.get_face_ids()
 
         if not known_encodings:
-            return Response({"message": "No known faces in database(database is empty)"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "No known faces in database(cache is empty)"}, status=status.HTTP_404_NOT_FOUND)
 
         # Compare
         results = face_recognition.compare_faces(known_encodings, unknown_encoding,tolerance=0.4)
@@ -226,7 +251,8 @@ class RecognizeFaceView(generics.GenericAPIView):
 
         best_match_index = np.argmin(face_distances)
         if results[best_match_index]:
-            matched_face = known_faces[int(best_match_index)]
+            matched_face_id = known_face_ids[int(best_match_index)]
+            matched_face = Faces.objects.get(id=matched_face_id)
             person = matched_face.personId
             # Capture attendance
             return self.capture_attendance(person.id, services_id, float(face_distances[best_match_index]))
