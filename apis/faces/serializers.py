@@ -11,6 +11,7 @@ class FacesSerializers(serializers.ModelSerializer):
 
 class RecognizeFaceSerializer(serializers.Serializer):
     pics = serializers.FileField(required=True)
+    servicesId = serializers.IntegerField(required=True)
 
 class CreateFaceSerializer(serializers.Serializer):
     frontview = serializers.FileField(required=True)

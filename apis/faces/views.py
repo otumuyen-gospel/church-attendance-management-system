@@ -18,6 +18,11 @@ from rest_framework import status
 import io
 from PIL import Image
 
+from attendance.models import Attendance
+from capturemethod.models import CaptureMethod
+from services.models import Services
+from django.utils import timezone
+
 
 class FacesList(generics.ListAPIView):
     queryset = Faces.objects.all()
@@ -153,10 +158,50 @@ class RecognizeFaceView(generics.GenericAPIView):
     serializer_class = RecognizeFaceSerializer
     #required_groups = requiredGroups(permission='view_faces')
 
+    def capture_attendance(self, personID, servicesId, faceMatchDistance, match= True):
+        try:
+            person = Person.objects.get(id=personID)
+            services = Services.objects.get(id=servicesId)
+            capture_method = CaptureMethod.objects.get(method=CaptureMethod.METHOD_FACE)
+            
+            today = timezone.now().date()
+            
+            # Check if already attended today
+            if Attendance.objects.filter(personId=person, attendanceDate=today, servicesId=services).exists():
+                return Response({
+                    "message": f"{person.firstName} {person.lastName} has already been marked present for today"
+                }, status=status.HTTP_200_OK)
+            
+            # Create attendance record
+            Attendance.objects.create(
+                personId=person,
+                servicesId=services,
+                captureMethodId=capture_method
+            )
+            
+            return Response({
+                "message": f"Attendance successfully captured for {person.firstName} {person.lastName}",
+                "person": f"{person.firstName} {person.lastName}",
+                "service": services.eventName,
+                "date": today,
+                "faceMatchDistance" :faceMatchDistance,
+                "match": True
+            }, status=status.HTTP_201_CREATED)
+            
+        except Person.DoesNotExist:
+            return Response({"error": "Person not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Services.DoesNotExist:
+            return Response({"error": "Service not found"}, status=status.HTTP_404_NOT_FOUND)
+        except CaptureMethod.DoesNotExist:
+            return Response({"error": "Face capture method not configured"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         file = serializer.validated_data['pics']
+        services_id = serializer.validated_data['servicesId']
 
         # Load uploaded image
         img = face_recognition.load_image_file(file)
@@ -181,8 +226,9 @@ class RecognizeFaceView(generics.GenericAPIView):
 
         best_match_index = np.argmin(face_distances)
         if results[best_match_index]:
-            name = known_names[best_match_index]
-            return Response({"match": True, "name": name, "distance": float(face_distances[best_match_index])})
+            matched_face = known_faces[int(best_match_index)]
+            person = matched_face.personId
+            # Capture attendance
+            return self.capture_attendance(person.id, services_id, float(face_distances[best_match_index]))
 
-        return Response({"match": False, "message": "Unknown person(face not recognized)"})
-        
+        return Response({"match": False, "message": "Unknown person(face not recognized)"}, status=status.HTTP_404_NOT_FOUND)
