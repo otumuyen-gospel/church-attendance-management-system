@@ -18,8 +18,8 @@ Including another URLconf
 from django.urls import path
 from .views import *
 urlpatterns = [
-    path('views/', MembershipList.as_view(), name='membership-list'),
-    path('create/', CreateMembership.as_view(), name='create-membership'),
-    path('delete/<int:id>/', DeleteMembership.as_view(), name='delete-membership'),
-    path('update/<int:id>/', UpdateMembership.as_view(), name='membership-update'),
+    path('memberships-list/', MembershipList.as_view(), name='membership-list'),
+    path('new-membership/', CreateMembership.as_view(), name='create-membership'),
+    path('remove-membership/<int:id>/', DeleteMembership.as_view(), name='delete-membership'),
+    path('modify-membership/<int:id>/', UpdateMembership.as_view(), name='membership-update'),
 ]

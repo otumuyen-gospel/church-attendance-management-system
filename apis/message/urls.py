@@ -18,9 +18,9 @@ Including another URLconf
 from django.urls import path
 from .views import *
 urlpatterns = [
-    path('views/', MessageList.as_view(), name='message-list'),
-    path('send-sms/', SendSMS.as_view(), name='text-message'),
-    path('delete/<int:id>/', DeleteMessage.as_view(), name='message-delete'),
-    path('send-email/', sendEmailMSG.as_view(), name='email-message'),
-    path('send-bulk-sms/', SendBulkSMS.as_view(), name='send-bulk-sms'),
+    path('all-messages/', MessageList.as_view(), name='message-list'),
+    path('send-sms-message/', SendSMS.as_view(), name='text-message'),
+    path('remove-message/<int:id>/', DeleteMessage.as_view(), name='message-delete'),
+    path('send-email-message/', sendEmailMSG.as_view(), name='email-message'),
+    path('send-bulk-sms-message/', SendBulkSMS.as_view(), name='send-bulk-sms'),
 ]

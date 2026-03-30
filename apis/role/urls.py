@@ -18,8 +18,8 @@ Including another URLconf
 from django.urls import path
 from .views import *
 urlpatterns = [
-    path('views/', RoleList.as_view(), name='role-list'),
-    path('create/', CreateRole.as_view(), name='create-role'),
-    path('delete/<int:id>/', DeleteRole.as_view(), name='delete-role'),
-    path('update/<int:id>/', UpdateRole.as_view(), name='role-update'),
+    path('list-roles/', RoleList.as_view(), name='role-list'),
+    path('new-role/', CreateRole.as_view(), name='create-role'),
+    path('remove-role/<int:id>/', DeleteRole.as_view(), name='delete-role'),
+    path('modify-role/<int:id>/', UpdateRole.as_view(), name='role-update'),
 ]

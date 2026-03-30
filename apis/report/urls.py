@@ -18,9 +18,9 @@ Including another URLconf
 from django.urls import path
 from .views import *
 urlpatterns = [
-    path('attendance/', AttendanceList.as_view(), name='attendance-report'),
-    path('households/', HouseHoldList.as_view(), name='household-report'),
-    path('contacts/', ContactList.as_view(), name='contacts-report'),
-    path('persons/', PersonList.as_view(), name='person-report'),
-    path('users/', UserList.as_view(), name='user-report'),
+    path('attendance-report/', AttendanceList.as_view(), name='attendance-report'),
+    path('households-report/', HouseHoldList.as_view(), name='household-report'),
+    path('contacts-report/', ContactList.as_view(), name='contacts-report'),
+    path('persons-report/', PersonList.as_view(), name='person-report'),
+    path('users-report/', UserList.as_view(), name='user-report'),
 ]

@@ -18,7 +18,7 @@ Including another URLconf
 from django.urls import path
 from .views import *
 urlpatterns = [
-    path('views/', PermissionsList.as_view(), name='permissions-list'),
-    path('create/', DeleteCreateUpdatePermissions.as_view(), name='update-permissions'),
+    path('all-permissions/', PermissionsList.as_view(), name='permissions-list'),
+    path('generate-all-permissions/', DeleteCreateUpdatePermissions.as_view(), name='update-permissions'),
     
 ]

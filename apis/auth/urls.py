@@ -13,11 +13,11 @@ router.register(r'refresh', RefreshViewSet, basename='refresh')
 
 urlpatterns = [
     *router.urls,
-    path('update-password/<int:id>/', UserPasswordUpdateView.as_view(), name='update-password'),
-    path('logout/', LogoutView.as_view(), name='logout'),
-    path('reset/request/', PasswordResetRequestAPIView.as_view(), name='request'),
-    path('reset/verify/', OTPVerificationAPIView.as_view(), name='verify'),
-    path('reset/password/', PasswordResetAPIView.as_view(), name='password'),
-    path('logentry/', LogEntryViews.as_view(), name='Log Entries'),
+    path('user-password-update/<int:id>/', UserPasswordUpdateView.as_view(), name='update-password'),
+    path('logout-user/', LogoutView.as_view(), name='logout'),
+    path('email-verification/', PasswordResetRequestAPIView.as_view(), name='request'),
+    path('otp-verification/', OTPVerificationAPIView.as_view(), name='verify'),
+    path('password-reset/', PasswordResetAPIView.as_view(), name='password'),
+    path('user-log-entries/', LogEntryViews.as_view(), name='Log Entries'),
 
 ]

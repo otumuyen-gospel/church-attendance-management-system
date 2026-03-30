@@ -19,9 +19,9 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path('views/', FacesList.as_view(), name='faces-list'),
-    path('upload/', CreateFaces.as_view(), name='create-faces'),
-    path('delete/<int:id>/', DeleteFaces.as_view(), name='delete-faces'),
-    path('update/', UpdateFaces.as_view(), name='faces-update'),
-    path('recognize/', RecognizeFaceView.as_view(), name='recognize'),
+    path('face-lists/', FacesList.as_view(), name='faces-list'),
+    path('upload-face/', CreateFaces.as_view(), name='create-faces'),
+    path('remove-face/<int:id>/', DeleteFaces.as_view(), name='delete-faces'),
+    path('modify-face/', UpdateFaces.as_view(), name='faces-update'),
+    path('recognize-face/', RecognizeFaceView.as_view(), name='recognize'),
 ]
