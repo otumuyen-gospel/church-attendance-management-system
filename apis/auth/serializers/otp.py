@@ -22,7 +22,8 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         EmailService.send_verification_email(
            user_email=user.email,
            user_name=user.username,
-           verification_code=user.otp
+           verification_code=user.otp,
+           church_logo=user.personId.churchId.logo.url if user.personId and user.personId.churchId else None
         )
 
         return value

@@ -104,19 +104,21 @@ class SendSMS(generics.CreateAPIView):
 class sendEmailMSG(generics.CreateAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializers
-    permission_classes = [IsAuthenticated,IsInGroup]
+    permission_classes = [IsAuthenticated, IsInGroup]
     required_groups = requiredGroups(permission='add_message')
     name = 'create-email-message'
 
     def create(self, request, *args, **kwargs):
         person = Person.objects.get(email=request.data['recipients'])
+        church = Church.objects.get(
+                id=Person.objects.get(id=self.request.user.personId.id).churchId.id)
         EmailService.send_generic_email(
             user_email=request.data['recipients'],
             title=request.data['title'],
             detail=request.data['detail'],
             user_name=person.firstName + " " +person.lastName,
-            church_name=Church.objects.get(
-                id=Person.objects.get(id=self.request.user.personId.id).churchId.id).name
+            church_name=church.name,
+            church_logo=church.logo.url
         )
         return super().create(request, *args, **kwargs)
 

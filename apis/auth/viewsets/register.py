@@ -41,12 +41,13 @@ class SignupViewset(ViewSet):
         
         
         # In your user registration view
+        church = Church.objects.get(id=Person.objects.get(id=request.data['personId'])
+                                        .churchId.id)
         EmailService.send_welcome_email(
          user_email=request.data['email'],
          user_name=request.data['username'],
-         church_name=Church.objects.get(id=
-                                        Person.objects.get(id=request.data['personId'])
-                                        .churchId.id).name,
+         church_name=church.name,
+         church_logo=church.logo.url,
          roles = role.permissions.split(',')
         )
         

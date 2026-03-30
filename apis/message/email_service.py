@@ -18,9 +18,13 @@ class EmailService:
             return None
 
     @staticmethod
-    def get_image_url(image_name):
+    def get_image_url(image_url):
         """Get full URL for image (for external URL method)."""
-        return f"{settings.SITE_URL}/static/images/{image_name}"
+        static_logo =f"{settings.SITE_URL}/apis/static/images/logo.jpg"
+        if image_url == 'logo.jpg':
+            return static_logo
+        else:
+            return settings.SITE_URL +  image_url;
 
     @staticmethod
     def send_email(
@@ -71,14 +75,14 @@ class EmailService:
         return email.send()
 
     @staticmethod
-    def send_welcome_email(user_email, user_name, church_name, roles):
+    def send_welcome_email(user_email, user_name, church_name, roles, church_logo):
         """Send welcome email to new user."""
         context = {
             'user_name': user_name,
             'church_name': church_name,
             'roles':roles,
             'site_url': settings.SITE_URL,
-            'logo_url': EmailService.get_image_url('logo.jpg'),
+            'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
         }
         
         return EmailService.send_email(
@@ -89,12 +93,12 @@ class EmailService:
         )
 
     @staticmethod
-    def send_verification_email(user_email, user_name, verification_code):
+    def send_verification_email(user_email, user_name, verification_code, church_logo):
         """Send email verification link."""
         context = {
             'user_name': user_name,
             'verification_code': verification_code,
-            'logo_url': EmailService.get_image_url('logo.jpg'),
+            'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
         }
         
         return EmailService.send_email(
@@ -105,7 +109,7 @@ class EmailService:
         )
 
     @staticmethod
-    def send_generic_email(user_email, user_name, title, detail, church_name,):
+    def send_generic_email(user_email, user_name, title, detail, church_name,church_logo):
         """Send welcome email to new user."""
         context = {
             'user_name': user_name,
@@ -113,7 +117,7 @@ class EmailService:
             'detail': detail,
             'title':title,
             'site_url': settings.SITE_URL,
-            'logo_url': EmailService.get_image_url('logo.jpg'),
+            'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
         }
         
         return EmailService.send_email(
