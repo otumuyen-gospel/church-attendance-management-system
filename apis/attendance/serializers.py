@@ -6,3 +6,8 @@ class attendanceSerializers(serializers.ModelSerializer):
     class Meta:
         model = Attendance
         fields = "__all__"
+
+
+class RecognizeFormSerializer(serializers.Serializer):
+    fullname = serializers.CharField(required=True)
+    servicesId = serializers.IntegerField(required=True)
