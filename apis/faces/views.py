@@ -181,7 +181,7 @@ class CreateFaces(generics.GenericAPIView):
 class RecognizeFaceView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsInGroup]
     serializer_class = RecognizeFaceSerializer
-    required_groups = requiredGroups(permission='view_faces')
+    required_groups = requiredGroups(permission='add_attendance')
 
     def capture_attendance(self, personID, servicesId, faceMatchDistance, match= True):
         try:
@@ -194,14 +194,15 @@ class RecognizeFaceView(generics.GenericAPIView):
             # Check if already attended today
             if Attendance.objects.filter(personId=person, attendanceDate=today, servicesId=services).exists():
                 return Response({
-                    "message": f"{person.firstName} {person.lastName} has already been marked present for today"
+                    "message": f"{person.firstName} {person.lastName} has already been marked present for today's {services.eventName}"
                 }, status=status.HTTP_200_OK)
             
             # Create attendance record
             Attendance.objects.create(
                 personId=person,
                 servicesId=services,
-                captureMethodId=capture_method
+                captureMethodId=capture_method,
+                remarks = "Attendance captured via face recognition"
             )
             
             return Response({
@@ -210,7 +211,7 @@ class RecognizeFaceView(generics.GenericAPIView):
                 "service": services.eventName,
                 "date": today,
                 "faceMatchDistance" :faceMatchDistance,
-                "match": True
+                "match": match
             }, status=status.HTTP_201_CREATED)
             
         except Person.DoesNotExist:
