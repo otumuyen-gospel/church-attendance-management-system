@@ -210,8 +210,8 @@ AUTH_USER_MODEL = 'user.User'
 
 REST_FRAMEWORK = {
 'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
-'PAGE_SIZE':5,
-'MAX_PAGE_SIZE':5,
+'PAGE_SIZE':10,
+'MAX_PAGE_SIZE':10,
 'DEFAULT_FILTER_BACKENDS': (
 'django_filters.rest_framework.DjangoFilterBackend',
 'rest_framework.filters.OrderingFilter',
@@ -226,7 +226,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=2),
     'UPDATE_LAST_LOGIN': True,
 }

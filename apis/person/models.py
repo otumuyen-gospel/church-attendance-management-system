@@ -7,7 +7,7 @@ from auditlog.registry import auditlog
 
 # Create your models here.
 class Person(models.Model):
-    churchId = models.ForeignKey(Church,on_delete=models.CASCADE)
+    churchId = models.ForeignKey(Church,on_delete=models.SET_NULL, null=True, blank=True)
     householdId = models.ForeignKey(HouseHold, on_delete=models.SET_NULL, null=True, blank=True)
     membershipId = models.ForeignKey(Membership, on_delete=models.SET_NULL, null=True, blank=True)
     firstName = models.TextField(blank=False)
