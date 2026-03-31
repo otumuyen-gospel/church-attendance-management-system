@@ -73,6 +73,9 @@ class CreateAttendance(generics.GenericAPIView):
             person = Person.objects.get(id=personID)
             services = Services.objects.get(id=servicesId)
             capture_method = CaptureMethod.objects.get(method=CaptureMethod.METHOD_FORM)
+
+            if services.eventDate != timezone.now().date() or services.eventDay != timezone.now().strftime('%a').upper():
+                return Response({"message" : f"Attendance can only be captured for today's services. The event date for {services.eventName} is {services.eventDate} {services.eventDay} {services.eventTime}."})
             
             today = timezone.now().date()
             

@@ -8,7 +8,7 @@ from auditlog.registry import auditlog
 # Create your models here.
 class Leadership(models.Model):
     personId = models.ForeignKey(Person, on_delete=models.CASCADE)
-    churchId = models.ForeignKey(Church, on_delete=models.CASCADE)
+    churchId = models.ForeignKey(Church, on_delete=models.SET_NULL, null=True, blank=True)
     ministryId = models.ForeignKey(Ministries, on_delete=models.SET_NULL,
                                    null=True, blank=True)
     roleId = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True )
