@@ -36,10 +36,10 @@ class LoginViewSet(ViewSet):
     def account_wizard(self, request):
         if not User.objects.exists():  #if no user exists create the admin user
             self.create_permissions()
-            self.create_admin_Role()
+            admin_role = self.create_admin_Role()
             church = self.create_admin_church(request)
             person = self.create_admin_person(request, church)
-            self.create_admin_user(request, person)
+            self.create_admin_user(request, person, admin_role)
     def create_permissions(self):
         #create the permissions first
             Permissions.objects.all().delete() #clear existing permissions
@@ -52,17 +52,18 @@ class LoginViewSet(ViewSet):
         if not Role.objects.filter(name='admin').exists():
             newGrp, iscreated = Group.objects.get_or_create(name='admin')
             permissions = Permissions.objects.all().values_list('permission', flat=True)
-            if iscreated:
+            if newGrp:
                 perms = Permission.objects.filter(codename__in=permissions)
                 newGrp.permissions.add(*perms)
                 admin_role = Role.objects.create(name='admin', description='Administrator role with all permissions',
                                                  permissions=','.join(permissions))
+                return admin_role
     def create_admin_church(self, request):
-        if not Church.objects.filter(name=request.data['username']).exists():
+        if not Church.objects.exists():
             church = Church.objects.create(
-                name=request.data['username'],
-                address='Admin Church Address',
-                description='Admin Church '
+                name='Assemblies of God Church Alimosho Mega Worship Center',
+                address='No 33, Fajumobi, Miccom/Ponle Street, Alimosho Lagos',
+                description='Assemblies of God Church Alimosho Mega Worship Center is a vibrant and welcoming church Located in the heart of Alimosho, Lagos.'
             )
             return church
 
@@ -76,19 +77,19 @@ class LoginViewSet(ViewSet):
                 email=request.data['username'] + "@gmail.com",
                 dob='2000-01-01',
                 entranceDate=timezone.now(),
-                churchId = church.id,
+                churchId = church,
 
             )
             return person
 
-    def create_admin_user(self, request, person):
+    def create_admin_user(self, request, person, role):
         obj = {
             'username':request.data['username'],
             'password':request.data['password'],
             'email':request.data['username'] + "@gmail.com",
             'is_superuser':True,
             'is_staff':True,
-            'roleId':Role.objects.get(name='admin').id,
+            'roleId':role.id,
             'is_active':True,
             'personId':person.id,
 
@@ -100,7 +101,6 @@ class LoginViewSet(ViewSet):
         '''check if user is added to a group otherwise 
         fetch user choosen group and add user to the group
         '''
-        role = Role.objects.get(name='admin')
         group = Group.objects.get(name=role.name)
         user.groups.add(group)
 
