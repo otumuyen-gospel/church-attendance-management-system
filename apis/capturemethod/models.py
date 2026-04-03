@@ -11,11 +11,11 @@ class CaptureMethod(models.Model):
     method = models.CharField(choices=CAPTURE_METHODS,
                                default=METHOD_FORM, unique=True)
     
-    METHOD_DESCRIPTION_FACE = 'Face Recognition'
-    METHOD_DESCRIPTION_FORM = 'Manual Form Entry'
+    METHOD_DESCRIPTION_FACE = 'Face Attendance Capture'
+    METHOD_DESCRIPTION_FORM = 'Form Attendance Capture'
     METHODS_DESCRIPTION = [
-        (METHOD_DESCRIPTION_FACE,'Face Recognition'),
-        (METHOD_DESCRIPTION_FORM,'Manual Form Entry'),
+        (METHOD_DESCRIPTION_FACE,'Face Attendance Capture'),
+        (METHOD_DESCRIPTION_FORM,'Form Attendance Capture'),
     ]
     description = models.CharField(choices=METHODS_DESCRIPTION,
                                default=METHOD_DESCRIPTION_FORM, unique=True)

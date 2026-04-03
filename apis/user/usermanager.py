@@ -24,6 +24,7 @@ class AccountManager(BaseUserManager):
         user.set_password(password)
         user.roleId =  kwargs.get('roleId')
         user.personId =  kwargs.get('personId')
+        user.two_factor_auth = kwargs.get('two_factor_auth', False)
         user.is_active = True
         if user.roleId.name == 'admin':
             user.is_superuser = True

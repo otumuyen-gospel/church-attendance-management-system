@@ -201,7 +201,7 @@ class RecognizeFaceView(generics.GenericAPIView):
                 personId=person,
                 servicesId=services,
                 captureMethodId=capture_method,
-                remarks = "Attendance captured via face recognition"
+                comment = capture_method.description
             )
             
             return Response({
@@ -228,7 +228,7 @@ class RecognizeFaceView(generics.GenericAPIView):
         file = serializer.validated_data['pics']
         services_id = serializer.validated_data['servicesId']
         services = Services.objects.get(id=services_id)
-        if services.eventDate != timezone.now().date() or services.eventDay != timezone.now().strftime('%a').upper():
+        if services.eventDate != timezone.now().date() and services.eventDay != timezone.now().strftime('%a').upper():
             return Response({"message" : f"Attendance can only be captured for today's services. The event date for {services.eventName} is {services.eventDate} {services.eventDay} {services.eventTime}."})
 
         # Load uploaded image

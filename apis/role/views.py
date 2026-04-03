@@ -1,3 +1,5 @@
+from permissions.models import Permissions
+
 from .models import Role
 from .serializers import RoleSerializers
 from django.shortcuts import render
@@ -58,7 +60,7 @@ class UpdateRole(generics.UpdateAPIView):
         permissions = self.request.POST.get('permissions')
         if permissions is not None:
             newGrp, iscreated = Group.objects.get_or_create(name=newGroupName)
-            lists = permissions.split(',')
+            lists = list(set(permissions.split(','))) #remove duplicates
             if iscreated:
               perms = Permission.objects.filter(codename__in=lists)
               newGrp.permissions.add(*perms)
@@ -92,7 +94,9 @@ class CreateRole(generics.CreateAPIView):
         permissions = request.data.get('permissions')
         if permissions is not None:
             newGrp, iscreated = Group.objects.get_or_create(name=name)
-            lists = permissions.split(',')
+            lists = list(set(permissions.split(','))) #remove duplicates
             if iscreated:
               perms = Permission.objects.filter(codename__in=lists)
               newGrp.permissions.add(*perms)
+    
+    

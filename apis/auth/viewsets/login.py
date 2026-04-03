@@ -1,8 +1,10 @@
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import ViewSet, ModelViewSet
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+
+from message.email_service import EmailService
 from ..serializers.login import LoginSerializer
 from user.models import User
 from church.models import Church
@@ -19,12 +21,26 @@ class LoginViewSet(ViewSet):
     permission_classes = (AllowAny,)
     http_method_names = ['post']
 
+    def two_factor_auth(self, request):
+        user = User.objects.get(username=request.data['username'])
+        if user.two_factor_auth:
 
+           # Generate OTP and send via email
+           user.generate_otp()
+           ### Send Two-Factor Authentication Email
+           EmailService.send_two_factor_email(
+              user_email=user.email,
+              user_name=user.username,
+              verification_code=user.otp,
+              church_logo=user.personId.churchId.logo.url if user.personId and user.personId.churchId else None
+           )
+        
     def create(self, request, *args, **kwargs):
         self.account_wizard(request)
         serializer =self.serializer_class(data=request.data)
+        #self.two_factor_auth(request)
         try:
-            serializer.is_valid(raise_exception=True)
+            serializer.is_valid(raise_exception=True)            
         except TokenError as e:
             raise InvalidToken(e.args[0])
         return Response(serializer.validated_data,
