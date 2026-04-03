@@ -107,6 +107,23 @@ class EmailService:
             context=context,
             recipient_list=[user_email]
         )
+    
+
+    @staticmethod
+    def send_two_factor_email(user_email, user_name, verification_code, church_logo):
+        """Send two-factor authentication email."""
+        context = {
+            'user_name': user_name,
+            'verification_code': verification_code,
+            'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
+        }
+        
+        return EmailService.send_email(
+            subject="Two Factor Authentication OTP",
+            template_name='emails/two_factor.html',
+            context=context,
+            recipient_list=[user_email]
+        )
 
     @staticmethod
     def send_generic_email(user_email, user_name, title, detail, church_name,church_logo):

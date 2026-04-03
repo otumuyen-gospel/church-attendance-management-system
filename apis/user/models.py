@@ -18,6 +18,7 @@ from auditlog.registry import auditlog
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(db_index=True, unique=True)
     username = models.CharField(max_length=11, unique=True)
+    two_factor_auth = models.BooleanField(blank=False, null=False, default=False)
     is_active = models.BooleanField(default=True)
     '''for administrators only'''
     is_superuser = models.BooleanField(default=False)
