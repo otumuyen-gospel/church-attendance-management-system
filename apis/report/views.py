@@ -69,15 +69,15 @@ class AttendanceList(generics.ListAPIView):
     
     #you can filter by field names specified here keyword e.g url?name='church one'
     filterset_fields = ('comment','checkInTimestamp','checkOutTimestamp',
-                        'personId__id','servicesId__id','captureMethodId__id') 
+                        'personId__id','servicesId__id','captureMethodId__id','attendanceDate') 
 
      #you can search using the "search" keyword
     search_fields = ('comment','checkInTimestamp','checkOutTimestamp',
-                        'personId__id','servicesId__id','captureMethodId__id')
+                        'personId__id','servicesId__id','captureMethodId__id','attendanceDate')
 
     #you can order using the "ordering" keyword
     ordering_fields = ('comment','checkInTimestamp','checkOutTimestamp',
-                        'personId__id','servicesId__id','captureMethodId__id') 
+                        'personId__id','servicesId__id','captureMethodId__id', 'attendanceDate') 
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(queryset=self.get_queryset()) #still filter
