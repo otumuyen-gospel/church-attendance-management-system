@@ -19,8 +19,11 @@ class UserPasswordUpdateView(GenericAPIView):
         user = User.objects.get(pk=id)
         if self.request.user.is_superuser or \
         user == self.request.user:
-           password = request.data['password'];
-           new_password = request.data['new_password']
+           password = self.request.data.get('password')
+           new_password = self.request.data.get('new_password')
+           if not password or not new_password:
+              return Response({"detail": "password and new_password fields are required"},status=status.HTTP_400_BAD_REQUEST)
+           
            if not user.check_password(raw_password=password):
               return Response({"detail": "user password does not match existing",}, 
                         status=status.HTTP_400_BAD_REQUEST)

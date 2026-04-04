@@ -3,7 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 from .models import User
 from role.models import Role
-from .serializers import UserSerializers
+from .serializers import UserSerializers, UserUpdateSerializers
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -44,7 +44,7 @@ class UserList(generics.ListAPIView):
 
 class UpdateUser(generics.UpdateAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializers
+    serializer_class = UserUpdateSerializers
     permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='change_user')
     name = 'user-update'
@@ -52,14 +52,21 @@ class UpdateUser(generics.UpdateAPIView):
 
     def get_object(self):
         obj = super().get_object()
-        if self.request.user.is_superuser or \
-             obj == self.request.user:
+        if self.request.user.is_superuser: 
             self.updateUserGroup(obj)
             return obj
+        elif obj == self.request.user:
+            #allow users to update their own profile but not role
+            return self.keepUserGroup(obj)
         
         else:
             raise PermissionDenied("You do not have permission to edit this object.")
-    
+    def keepUserGroup(self, obj):
+        roleId = self.request.data.get('roleId')
+        if int(roleId) == int(obj.roleId_id): #user did not change role
+            return obj
+        else:
+            raise PermissionDenied("You do not have permission to change your role")
     def updateUserGroup(self,obj):
         user = self.queryset.get(pk=obj.id)
         roleId = self.request.data.get('roleId')
@@ -89,3 +96,12 @@ class DeleteUser(generics.DestroyAPIView):
     required_groups = requiredGroups(permission='delete_user')
     name = 'user-delete'
     lookup_field = "id"
+
+    def get_object(self):
+        obj = super().get_object()
+        if self.request.user.is_superuser or \
+             obj == self.request.user:
+            return obj
+        
+        else:
+            raise PermissionDenied("You do not have permission to delete this user.")
