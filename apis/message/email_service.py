@@ -1,6 +1,6 @@
 import os
 import base64
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
@@ -25,9 +25,9 @@ class EmailService:
             return static_logo
         else:
             return settings.SITE_URL +  image_url;
-
+    
     @staticmethod
-    def send_email(
+    def send_automated_email(
         subject,
         template_name,
         context,
@@ -74,6 +74,69 @@ class EmailService:
 
         return email.send()
 
+
+    @staticmethod
+    def send_email(
+        subject,
+        template_name,
+        contexts,
+        recipient_list,
+        from_email=None,
+        embed_images=False,
+        attachments=None
+    ):
+        """
+        Send HTML email with optional embedded images.
+        
+        Args:
+            subject: Email subject
+            template_name: Template path (e.g., 'emails/welcome.html')
+            context: Dictionary of template context variables
+            recipient_list: List of recipient email addresses
+            from_email: Sender email (defaults to DEFAULT_FROM_EMAIL)
+            embed_images: If True, convert static images to base64
+            attachments: List of tuples (filename, content, mimetype)
+        
+        Returns:
+            Number of messages sent
+        """
+        if from_email is None:
+            from_email = settings.DEFAULT_FROM_EMAIL
+
+        # Render template
+        html_messages = []
+        text_messages = []
+        for context in contexts:
+             html_message = render_to_string(template_name, context)
+             html_messages.append(html_message)
+             text_messages.append(strip_tags(html_message))
+
+        connection = get_connection()
+        connection.open()
+
+        messages =[]
+
+        # Create email
+        count = 0
+        for recipient in recipient_list:
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_messages[count],
+                from_email=from_email,
+                to=[recipient],
+            )
+            email.attach_alternative(html_messages[count], "text/html")
+            count += 1
+
+            # Add attachments if provided
+            if attachments:
+                 for filename, content, mimetype in attachments:
+                    email.attach(filename, content, mimetype)
+            messages.append(email)
+
+        connection.send_messages(messages)
+        connection.close()
+
     @staticmethod
     def send_welcome_email(user_email, user_name, church_name, roles, church_logo):
         """Send welcome email to new user."""
@@ -85,7 +148,7 @@ class EmailService:
             'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
         }
         
-        return EmailService.send_email(
+        EmailService.send_automated_email(
             subject=f"Welcome to {church_name} Attendance System",
             template_name='emails/welcome.html',
             context=context,
@@ -101,7 +164,7 @@ class EmailService:
             'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
         }
         
-        return EmailService.send_email(
+        EmailService.send_automated_email(
             subject="Verify Your Email Address",
             template_name='emails/verification.html',
             context=context,
@@ -118,7 +181,7 @@ class EmailService:
             'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
         }
         
-        return EmailService.send_email(
+        EmailService.send_automated_email(
             subject="Two Factor Authentication OTP",
             template_name='emails/two_factor.html',
             context=context,
@@ -128,19 +191,22 @@ class EmailService:
     @staticmethod
     def send_generic_email(user_email, user_name, title, detail, church_name,church_logo):
         """Send welcome email to new user."""
-        context = {
-            'user_name': user_name,
+        contexts = []
+        for name in user_name:
+            context = {
+            'user_name': name,
             'church_name': church_name,
             'detail': detail,
             'title':title,
             'site_url': settings.SITE_URL,
             'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
-        }
-        
-        return EmailService.send_email(
-            subject=title,
-            template_name='emails/generic.html',
-            context=context,
-            recipient_list=[user_email]
+           }
+            contexts.append(context)
+
+        EmailService.send_email(
+                subject=title,
+                template_name='emails/generic.html',
+                contexts=contexts,
+            recipient_list=user_email
         ) 
   

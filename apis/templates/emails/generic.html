@@ -5,8 +5,6 @@
 {% block content %}
 <h2>Hello, {{ user_name }}!</h2>
 
-<p>Welcome to the <strong>{{ church_name }} Attendance Management System</strong>. We're excited to have you on board!</p>
-
 <div>
     {{detail}}
 </div>
@@ -16,5 +14,12 @@
 <p>If you have any questions or need assistance, please don't hesitate to reach out to our support team.</p>
 
 <p>Site Administrators,<br>
-<strong>{{ church_name }} Team</strong></p>
+<strong>{{ church_name }} media Support Team</strong></p>
+{% endblock %}
+
+{% block footer %}
+<div class="email-footer">
+            <p>&copy; {% now "Y" %} Church Attendance Management System. All rights reserved.</p>
+            <p>{{ church_name }} is a registered trademark of the Church Attendance Management System.</p>
+        </div>
 {% endblock %}
