@@ -1,4 +1,6 @@
+
 from .models import Message
+import re
 from .serializers import MessageSerializers
 from django.shortcuts import render
 from rest_framework import status
@@ -67,15 +69,15 @@ class SendSMS(generics.CreateAPIView):
     permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_message')
     name = 'create-text-message'
-    def create(self, request, *args, **kwargs):
+    def perform_create(self, serializer):
         try:
-            phone_number = request.data.get('recipients')
-            message_title = request.data.get('title')
-            message_body = request.data.get('detail')
+            phone_number = self.request.data.get('recipients')
+            message_title = self.request.data.get('title')
+            message_body = self.request.data.get('detail')
 
             if not phone_number or not message_title or not message_body:
                 return Response(
-                    {'error': 'recipients, title, and detail are required'},
+                    {'error': 'recipients(phone number), title, and detail are required'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -85,8 +87,8 @@ class SendSMS(generics.CreateAPIView):
                 message_title=message_title,
                 message_body=message_body
             )
-
-            return super().create(request, *args, **kwargs)
+            serializer.save(senderId=self.request.user.personId)
+            return super().perform_create(serializer)
 
         except ImproperlyConfigured as e:
             return Response(
@@ -107,20 +109,30 @@ class sendEmailMSG(generics.CreateAPIView):
     permission_classes = [IsAuthenticated, IsInGroup]
     required_groups = requiredGroups(permission='add_message')
     name = 'create-email-message'
-
-    def create(self, request, *args, **kwargs):
-        person = Person.objects.get(email=request.data['recipients'])
+    def perform_create(self, serializer):
+        recipients = self.request.data.get('recipients')
+        title = self.request.data.get('title')
+        detail = self.request.data.get('detail')
+        if not recipients or not title or not detail:
+            return Response({'error': 'Recipients(multiple recipients must be comma-separated without spaces), title, and detail are required'},status=status.HTTP_400_BAD_REQUEST)
+        username = []
+        recipients_list = recipients.split(',')
+        for recipient in recipients_list:
+            person = Person.objects.get(email=recipient)
+            if person:
+                username.append(person.firstName + " " + person.lastName)
         church = Church.objects.get(
                 id=Person.objects.get(id=self.request.user.personId.id).churchId.id)
         EmailService.send_generic_email(
-            user_email=request.data['recipients'],
-            title=request.data['title'],
-            detail=request.data['detail'],
-            user_name=person.firstName + " " +person.lastName,
-            church_name=church.name,
-            church_logo=church.logo.url
-        )
-        return super().create(request, *args, **kwargs)
+                user_email=recipients.split(','),
+                title=title,
+                detail=detail,
+                user_name=username,
+                church_name=church.name,
+                church_logo=church.logo.url)
+        serializer.save(senderId=self.request.user.personId)
+            
+        return super().perform_create(serializer)
 
 
 class SendBulkSMS(generics.CreateAPIView):
@@ -139,12 +151,11 @@ class SendBulkSMS(generics.CreateAPIView):
     permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_message')
     name = 'send-bulk-sms'
-    def create(self, request, *args, **kwargs):
-        
+    def perform_create(self, serializer):
         try:
-            phone_numbers = request.data.get('recipients').split(',')
-            message_title = request.data.get('title')
-            message_body = request.data.get('detail')
+            phone_numbers = self.request.data.get('recipients').split(',')
+            message_title = self.request.data.get('title')
+            message_body = self.request.data.get('detail')
 
             if not phone_numbers or not isinstance(phone_numbers, list):
                 return Response(
@@ -165,7 +176,8 @@ class SendBulkSMS(generics.CreateAPIView):
                 message_body=full_message
             )
 
-            return super().create(request, *args, **kwargs)
+            serializer.save(senderId=self.request.user.personId)
+            return super().perform_create(serializer)
 
         except ImproperlyConfigured as e:
             return Response(
