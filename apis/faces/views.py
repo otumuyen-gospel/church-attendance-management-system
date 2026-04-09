@@ -11,11 +11,6 @@ from .serializers import FacesSerializers, RecognizeFaceSerializer, CreateFaceSe
 
 import face_recognition
 import numpy as np
-
-import concurrent.futures
-import io
-
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -65,8 +60,11 @@ class UpdateFaces(generics.GenericAPIView):
     name = 'faces-update'
     
     def post(self, request, *args, **kwargs):
-        #Get Person
-        personId = Person.objects.get(id=request.data.get('personId'))
+        #Get request data
+        id = self.request.data.get('personId')
+        if not id:
+            return Response({"error": "personId is required"}, status=status.HTTP_400_BAD_REQUEST)
+        personId = Person.objects.get(id=id)
         if not personId:
             return Response({"error": "Person with the provided ID does not exist."}, status=status.HTTP_404_NOT_FOUND)
         face = Faces.objects.filter(personId=personId)
@@ -81,17 +79,15 @@ class UpdateFaces(generics.GenericAPIView):
         frownview = self.request.FILES.get('frownview')
         image_files = [frontview, leftsideview, rightsideview, smileview, frownview]
         if not all(image_files):
-            return Response({"error": "All 5 images must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "frontview, leftsideview, rightsideview, smileview(smiling), and frownview(frowning) of user face are all required"}, status=status.HTTP_400_BAD_REQUEST)
         
 
-        # Process images in parallel for better performance
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            future_to_file = {executor.submit(process_image_encoding, file): file for file in image_files}
-            all_encodings = []
-            for future in concurrent.futures.as_completed(future_to_file):
-                encoding = future.result()
-                if encoding is not None:
-                    all_encodings.append(encoding)
+         # Process images sequentially 
+        all_encodings = []
+        for file in image_files:
+           encoding= process_image_encoding(file)
+           if encoding is not None:
+               all_encodings.append(encoding)
 
         if not all_encodings:
             return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
@@ -121,22 +117,23 @@ class DeleteFaces(generics.DestroyAPIView):
     name = 'delete-faces'
     lookup_field = "id"
 
-
 class CreateFaces(generics.GenericAPIView):
     serializer_class = CreateFaceSerializer
     permission_classes = [IsAuthenticated, IsInGroup]
     required_groups = requiredGroups(permission='add_faces')
     name = 'create-faces'
-
-    def post(self, request, *args, **kwargs):
-        #Get Person
-        personId = Person.objects.get(id=request.data.get('personId'))
+    def post(self,request, *args, **kwargs):
+        #Get request data
+        id = self.request.data.get('personId')
+        if not id:
+            return Response({"error": "personId is required"}, status=status.HTTP_400_BAD_REQUEST)
+        personId = Person.objects.get(id=id)
         if not personId:
             return Response({"error": "Person with the provided ID does not exist."}, status=status.HTTP_404_NOT_FOUND)
         if Faces.objects.filter(personId=personId).exists():
             return Response({"error": "A face record already exists for this person."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Load and encode
+        # upload face views
         frontview = self.request.FILES.get('frontview')
         leftsideview = self.request.FILES.get('leftsideview')
         rightsideview = self.request.FILES.get('rightsideview')
@@ -144,35 +141,29 @@ class CreateFaces(generics.GenericAPIView):
         frownview = self.request.FILES.get('frownview')
         image_files = [frontview, leftsideview, rightsideview, smileview, frownview]
         if not all(image_files):
-            return Response({"error": "All 5 images must be provided"}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response({"error": "frontview, leftsideview, rightsideview, smileview(smiling), and frownview(frowning) of user face are all required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Process images in parallel for better performance
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            future_to_file = {executor.submit(process_image_encoding, file): file for file in image_files}
-            all_encodings = []
-            for future in concurrent.futures.as_completed(future_to_file):
-                encoding = future.result()
-                if encoding is not None:
-                    all_encodings.append(encoding)
+        # Process images sequentially 
+        all_encodings = []
+        for file in image_files:
+           encoding= process_image_encoding(file)
+           if encoding is not None:
+               all_encodings.append(encoding)
 
         if not all_encodings:
             return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Average the encodings for better accuracy
         avg_encoding = np.mean(all_encodings, axis=0).tolist()
+
         #create new face record for the person
-        Faces.objects.create(
-            personId=personId,
-            encoding=avg_encoding,
-            pics=frontview
-        )
+        Faces.objects.create(personId=personId, encoding=avg_encoding, pics=frontview)
 
         # Invalidate cache to refresh with new face
         FacesCache.invalidate_cache()
-
+    
         return Response({
-            "message": f"Face registered for {personId.firstName} {personId.lastName}",
+            "message": f"Face created for {personId.firstName} {personId.lastName}",
             "encodings": avg_encoding
         }, status=status.HTTP_201_CREATED)
 
