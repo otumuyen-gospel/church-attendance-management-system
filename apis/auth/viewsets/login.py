@@ -4,6 +4,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
+from user.serializers import UserSerializers
 from message.email_service import EmailService
 from ..serializers.login import LoginSerializer
 from user.models import User
@@ -16,31 +17,39 @@ from ..serializers.register import SignupSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 
+from rest_framework import serializers
+from faces.models import Faces
+import face_recognition
+import numpy as np
+from faces.cache import FacesCache
+
 class LoginViewSet(ViewSet):
     serializer_class = LoginSerializer
     permission_classes = (AllowAny,)
     http_method_names = ['post']
 
-    def two_factor_auth(self, request):
-        user = User.objects.get(username=request.data['username'])
+    def two_factor_auth(self):
+        user = User.objects.get(username=self.request.data.get('username'))
         if user.two_factor_auth:
 
            # Generate OTP and send via email
            user.generate_otp()
            ### Send Two-Factor Authentication Email
+           church = Church.objects.get(id=(Person.objects.get(id=user.personId.id)
+                                        .churchId.id))
            EmailService.send_two_factor_email(
               user_email=user.email,
               user_name=user.username,
               verification_code=user.otp,
-              church_logo=user.personId.churchId.logo.url if user.personId and user.personId.churchId else None
+              church_logo=church.logo.url
            )
         
     def create(self, request, *args, **kwargs):
         self.account_wizard(request)
         serializer =self.serializer_class(data=request.data)
-        #self.two_factor_auth(request)
         try:
-            serializer.is_valid(raise_exception=True)            
+            serializer.is_valid(raise_exception=True) 
+            self.two_factor_auth() # Trigger 2FA if enable for the user           
         except TokenError as e:
             raise InvalidToken(e.args[0])
         return Response(serializer.validated_data,
@@ -125,3 +134,82 @@ class LoginViewSet(ViewSet):
         '''
         refresh = RefreshToken.for_user(user)
     
+
+
+
+
+'''This viewset is for face recognition Login, it can't be used until there are some faces in the database'''
+class FaceLoginViewSet(ViewSet):
+    permission_classes = (AllowAny,)
+    http_method_names = ['post']
+    user = None    
+    def create(self, request, *args, **kwargs):
+        try:
+            data = self.face_wizard()
+            self.two_factor_auth() # Trigger 2FA if enabled by the user for the user          
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+        return Response(data,status=status.HTTP_200_OK)
+    
+    def two_factor_auth(self):
+        if self.user.two_factor_auth:
+
+           # Generate OTP and send via email
+           self.user.generate_otp()
+           ### Send Two-Factor Authentication Email
+           church = Church.objects.get(id=(Person.objects.get(id=self.user.personId.id)
+                                        .churchId.id))
+           EmailService.send_two_factor_email(
+              user_email=self.user.email,
+              user_name=self.user.username,
+              verification_code=self.user.otp,
+              church_logo=church.logo.url
+           )
+
+    '''
+    this function helps to recognize the user face
+    '''
+    def face_wizard(self):
+        # Load uploaded image
+        file = self.request.FILES.get('pics')
+        if not file:
+            raise serializers.ValidationError({"pics": "No image uploaded"})
+        
+        #Get face Encoding
+        img = face_recognition.load_image_file(file)
+        unknown_encodings = face_recognition.face_encodings(img, num_jitters=10)
+
+        if not unknown_encodings:
+            raise serializers.ValidationError({"Error": "Please upload an image with a face"})
+
+        unknown_encoding = unknown_encodings[0]
+
+        # Get all known faces from cache
+        known_encodings = FacesCache.get_all_encodings()
+        known_face_ids = FacesCache.get_face_ids()
+
+        if not known_encodings:
+            raise serializers.ValidationError({"Error": "No known faces in database(cache is empty)"})
+        
+        # Compare
+        results = face_recognition.compare_faces(known_encodings, unknown_encoding,tolerance=0.4)
+        face_distances = face_recognition.face_distance(known_encodings, unknown_encoding)
+
+        best_match_index = np.argmin(face_distances)
+        if results[best_match_index]:
+            matched_face_id = known_face_ids[int(best_match_index)]
+            matched_face = Faces.objects.get(id=matched_face_id)
+            person = matched_face.personId
+            # check if the person has an associated user account
+            self.user = User.objects.filter(personId=person).first()
+            if self.user:
+               refresh = RefreshToken.for_user(self.user)
+               return {
+                   'refresh': str(refresh),
+                   'access': str(refresh.access_token),
+                   'user': UserSerializers(self.user).data
+               }
+
+            else:
+                raise serializers.ValidationError({"Error": "face recognized but no user account associated with this face or person"})
+        raise serializers.ValidationError({"Error": "Unknown person(face not recognized)"})
