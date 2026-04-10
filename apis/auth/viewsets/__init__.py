@@ -1,3 +1,3 @@
 from .register import SignupViewset
-from .login import LoginViewSet
+from .login import LoginView
 from .refresh import RefreshViewSet

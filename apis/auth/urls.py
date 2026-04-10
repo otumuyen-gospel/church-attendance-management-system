@@ -1,16 +1,17 @@
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 from  .viewsets.register import SignupViewset
-from .viewsets.login import FaceLoginViewSet, LoginViewSet
+from .viewsets.login import FaceLoginView, LoginView, OTPVerificationLoginView
 from .viewsets.refresh import RefreshViewSet
 from .views import *
 from .viewsets.password import UserPasswordUpdateView
 
 router = SimpleRouter()
 router.register(r'register', SignupViewset, basename='register')
-router.register(r'login', LoginViewSet, basename='login')
 router.register(r'refresh', RefreshViewSet, basename='refresh')
-router.register(r'face-login', FaceLoginViewSet, basename='face-login')
+router.register(r'face-login', FaceLoginView, basename='face-login')
+router.register(r'login', LoginView, basename='login')
+router.register(r'verify-login', OTPVerificationLoginView, basename='otp-verification-login')
 
 urlpatterns = [
     *router.urls,
