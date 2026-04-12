@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework_simplejwt.exceptions import TokenError,InvalidToken
 class RefreshViewSet(viewsets.ViewSet, TokenRefreshView):
+    throttle_scope = 'refresh'
     permission_classes = (AllowAny,)
     http_method_names = ['post']
     def create(self, request, *args, **kwargs):

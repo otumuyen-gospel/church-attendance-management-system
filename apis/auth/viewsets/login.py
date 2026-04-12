@@ -38,6 +38,7 @@ class PreAuthToken(Token):
         return token
 
 class FaceLoginView(ViewSet):
+    throttle_scope = 'face_login'
     permission_classes = (AllowAny,)
     http_method_names = ['post']
 
@@ -127,6 +128,7 @@ class FaceLoginView(ViewSet):
 
 
 class LoginView(ViewSet):
+    throttle_scope = 'password_login'
     permission_classes = (AllowAny,)
     http_method_names = ['post']
 
@@ -262,6 +264,7 @@ class LoginView(ViewSet):
 
 
 class OTPVerificationLoginView(ViewSet):
+    throttle_scope = 'otp_login'
     serializer_class = OTPVerificationSerializer
     permission_classes = (AllowAny,)
     http_method_names = ['post']
@@ -305,6 +308,7 @@ class OTPVerificationLoginView(ViewSet):
 '''
 old login code and face login code
 class LoginViewSet(ViewSet):
+    throttle_scope = 'password_login'
     serializer_class = LoginSerializer
     permission_classes = (AllowAny,)
     http_method_names = ['post']
@@ -408,6 +412,7 @@ class LoginViewSet(ViewSet):
 
 This viewset is for face recognition Login, it can't be used until there are some faces in the database
 class FaceLoginViewSet(ViewSet):
+    throttle_scope = 'face_login'
     permission_classes = (AllowAny,)
     http_method_names = ['post']
     user = None    

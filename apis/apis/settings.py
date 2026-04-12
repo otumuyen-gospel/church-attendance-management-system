@@ -212,6 +212,22 @@ REST_FRAMEWORK = {
 'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
 'PAGE_SIZE':10,
 'MAX_PAGE_SIZE':10,
+'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user':'1000/day',
+        'refresh': '10/hour',
+        'face_login': '100/day',
+        'password_login': '100/day',
+        'otp_login': '100/day',
+        'password_reset_request':'100/day',
+        'otp_verification':'100/day',
+        'password_reset':'100/day',
+
+
+    },
 'DEFAULT_FILTER_BACKENDS': (
 'django_filters.rest_framework.DjangoFilterBackend',
 'rest_framework.filters.OrderingFilter',
