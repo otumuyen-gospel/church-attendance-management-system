@@ -18,6 +18,7 @@ any storage of tokens details in frontend or browser local
 storage to avoid using it again 
 '''
 class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         try:
             refresh_token = request.data["refresh_token"]
@@ -30,6 +31,7 @@ class LogoutView(APIView):
 
 
 class PasswordResetRequestAPIView(APIView):
+    throttle_scope = 'password_reset_request'
     permission_classes = [AllowAny,]
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
@@ -45,6 +47,7 @@ class PasswordResetRequestAPIView(APIView):
     
 
 class OTPVerificationAPIView(APIView):
+    throttle_scope = 'otp_verification'
     permission_classes = [AllowAny,]
     def post(self, request):
         serializer = OTPVerificationSerializer(data=request.data)
@@ -59,6 +62,7 @@ class OTPVerificationAPIView(APIView):
         )
 
 class PasswordResetAPIView(APIView):
+    throttle_scope = 'password_reset'
     permission_classes = [AllowAny,]
     def post(self, request):
         serializer = PasswordResetSerializer(data=request.data)
@@ -77,5 +81,5 @@ class LogEntryViews(generics.ListAPIView):
     queryset = LogEntry.objects.all().order_by('-timestamp')
     serializer_class = LogEntrySerializer
     permission_classes = [IsAuthenticated, IsInGroup]
-    #required_groups = ['admin',]
+    required_groups = ['admin',]
     name = 'user-logs'
