@@ -53,6 +53,19 @@ class FacesList(generics.ListAPIView):
     ordering_fields = ('personId__id',)
 
 
+class CacheFaces(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsInGroup]
+    reuired_groups = requiredGroups(permission='add_faces')
+    name='cache-faces'
+    def post(self, request, *args, **kwargs):
+        # Get all Faces from database
+        faces = Faces.objects.all()
+        if not faces.exists():
+            return Response({"message": "No faces found in database to cache"}, status=status.HTTP_404_NOT_FOUND)
+        # Clear existing cache and load fresh data from database
+        FacesCache.refresh_cache()
+        return Response({"message": "Faces cache refreshed successfully"}, status=status.HTTP_200_OK)
+
 class UpdateFaces(generics.GenericAPIView):
     serializer_class = CreateFaceSerializer
     permission_classes = [IsAuthenticated, IsInGroup]
@@ -99,13 +112,9 @@ class UpdateFaces(generics.GenericAPIView):
         face.encoding=avg_encoding
         face.pics=frontview
         face.save()
-
-        # Invalidate cache to refresh with updated face
-        FacesCache.invalidate_cache()
         
         return Response({
             "message": f"Face updated for {personId.firstName} {personId.lastName}",
-            "encodings": avg_encoding
         }, status=status.HTTP_201_CREATED)
 
 
@@ -158,13 +167,9 @@ class CreateFaces(generics.GenericAPIView):
 
         #create new face record for the person
         Faces.objects.create(personId=personId, encoding=avg_encoding, pics=frontview)
-
-        # Invalidate cache to refresh with new face
-        FacesCache.invalidate_cache()
     
         return Response({
             "message": f"Face created for {personId.firstName} {personId.lastName}",
-            "encodings": avg_encoding
         }, status=status.HTTP_201_CREATED)
 
 
