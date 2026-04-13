@@ -24,4 +24,5 @@ urlpatterns = [
     path('remove-face/<int:id>/', DeleteFaces.as_view(), name='delete-faces'),
     path('modify-face/', UpdateFaces.as_view(), name='faces-update'),
     path('recognize-face/', RecognizeFaceView.as_view(), name='recognize'),
+    path('cache-face/', CacheFaces.as_view(), name='cache'),
 ]

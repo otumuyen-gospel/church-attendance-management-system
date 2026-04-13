@@ -1,5 +1,6 @@
 from django.db import models
 from person.models import Person
+from encrypted_json_fields.fields import EncryptedJSONField
 
 # Create your models here.
 def upload_to(instance, filename):
@@ -8,7 +9,7 @@ def upload_to(instance, filename):
 class Faces(models.Model):
     pics = models.FileField(blank=False, upload_to=upload_to)
     personId = models.ForeignKey(Person, on_delete=models.CASCADE)
-    encoding = models.JSONField(null=False, default=dict) # Stores the 128-d vector
+    encoding = EncryptedJSONField(null=False, default=dict) # Stores the 128-d vector
 
     def __str__(self):
         return f'{self.personId.firstName} {self.personId.lastName}'

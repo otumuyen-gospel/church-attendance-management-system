@@ -27,6 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY','')
+EJF_ENCRYPTION_KEYS = [
+    os.environ.get('EJF_ENCRYPTION_KEYS'),
+]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -67,6 +70,7 @@ INSTALLED_APPS = [
     'analytics',
     'report',
     'message',
+    'encrypted_json_fields',
     
 ]
 
