@@ -27,6 +27,7 @@ from role.models import Role
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.utils.dateparse import parse_datetime
+import bisect
 
 # Create your views here.
 class Analytics(APIView):
@@ -142,25 +143,39 @@ class FollowupAnalytics(APIView):
         "newbie", "greenhorn", "blow-in", "new kid on the block", "attendee", "participant",
         "spectator", "audience", "listener", "patron", "customer", "client", "new user", "prospect",
           "crasher", "gatecrasher", "walk-in", "punter", "rubberneck", "drifter",
-            "bum",'visitor', 'new member','new believer', 'new visitor','fresher'
+            "bum",'visitor','visitors', 'new member','new believer', 'new visitor','fresher'
     ]
     def get(self, request):
         try:
+            self.visitor_synonyms.sort(key=str.lower) #sort the list for binary search
             person = Person.objects.values()
             #attendance less than or equal to a month ago
             one_month_ago = timezone.now() - timedelta(days=30)
-            attendance = Attendance.objects.filter(checkInTimestamp__gte=one_month_ago).values()
-
-            #All visitors
+            #deduplicate and sort attendance by personId_id for binary search
+            attendance = sorted(set(Attendance.objects.filter(checkInTimestamp__gte=one_month_ago).values_list('personId_id', flat=True))) 
+            #All visitors using binary search for efficiency
             visitors = []
             for p in person:
-                if any(Membership.objects.get(id=p['membershipId_id']).status.lower() 
-                       in v for v in self.visitor_synonyms):
-                    visitors.append(p)
+                if not p["membershipId_id"]:
+                     continue
+                target = Membership.objects.get(id=p['membershipId_id']).status.lower()
+                index = bisect.bisect_left(self.visitor_synonyms, target) #binary search for the target
+                if index < len(self.visitor_synonyms) and self.visitor_synonyms[index] == target:
+                    visitors.append({'id':p['id'],
+                                         'firstName':p['firstName'],
+                                         'lastName':p['lastName'],
+                                         'email':p['email'],
+                                         'phone':p['phone'],
+                                         'entranceDate':p['entranceDate']
+                                         })
 
             #today's birthday celebrant
             df = pd.DataFrame.from_records(person)
             df['dob'] = pd.to_datetime(df['dob'])
+            #cleanup
+            df['householdId_id'].fillna('None',inplace=True)
+            df['membershipId_id'].fillna('None',inplace=True)
+            df['churchId_id'].fillna('None',inplace=True)
             today = timezone.now().date()
             today_birthdays = df[
                (df['dob'].dt.month == (today.month)) & 
@@ -169,19 +184,26 @@ class FollowupAnalytics(APIView):
             if today_birthdays.empty:
                 today_birthdays= []
             else:
-                #cleanup
-               today_birthdays['householdId_id'].fillna('None',inplace=True)
-               today_birthdays = today_birthdays.to_dict(orient='records')
+               today_birthdays = today_birthdays[['id','firstName','lastName','email','phone','dob']].to_dict(orient='records')
             
-            # church absentees for the past one month
+            # church absentees for the past one month using binary search for efficiency
             absentees = []
             if(attendance):
                 for p in person:
-                    target_key = 'personId_id'
-                    target_value = p['id']
-                    isPresent = any(d.get(target_key) == target_value for d in attendance)
-                    if not isPresent:
-                        absentees.append(p)
+                    target = int(p['id'])
+                    index = bisect.bisect_left(attendance, target) #binary search for the target
+                    if index < len(attendance) and attendance[index] == target:
+                       #person is present in the attendance list so ignore
+                       continue
+                    else:
+                       #person is not present in the list, so absent for the past one month
+                       absentees.append({'id':p['id'],
+                                         'firstName':p['firstName'],
+                                         'lastName':p['lastName'],
+                                         'email':p['email'],
+                                         'phone':p['phone']
+                                         })
+                        
             return Response({"absentees":absentees,
                              'today_birthday_celebrants':today_birthdays,
                              'visitors':visitors}, 
