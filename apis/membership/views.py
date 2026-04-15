@@ -15,8 +15,6 @@ from django.http import HttpResponse
 from role.util import requiredGroups
 from user.permissions import IsInGroup
 
-
-
 #this generic class will handle GET method to be used by the admin alone
 class MembershipList(generics.ListAPIView):
     queryset = Membership.objects.all()
