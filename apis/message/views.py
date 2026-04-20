@@ -25,6 +25,7 @@ from person.models import Person
 from church.models import Church
 from rest_framework.decorators import action
 from django.core.exceptions import ImproperlyConfigured
+from user.apps import executor
 
 
 
@@ -84,12 +85,13 @@ class SendSMS(generics.CreateAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            SMSService(
+            sms = SMSService(
                 to_number=phone_number,
                 message_title=message_title,
                 message_body=message_body,
                 type='generic'
-            ).start() # Start the thread to send SMS asynchronously
+            )
+            executor.submit(sms.run)
 
             serializer.save(senderId=self.request.user.personId)
             return super().perform_create(serializer)
@@ -129,12 +131,8 @@ class sendEmailMSG(generics.CreateAPIView):
                 id=Person.objects.get(id=self.request.user.personId.id).churchId.id)
         
         try:
-            # 2. Fire and forget: send email in a thread
-            thread = threading.Thread(
-            target=EmailService.send_generic_email, 
-            args=(recipients.split(','), username, title, detail, church.name, church.logo.url)
-            )
-            thread.start() # Thread starts, code continues immediately
+            # Fire and forget: send email in a thread without blocking the main request thread
+            executor.submit(EmailService.send_generic_email, recipients.split(','), username, title, detail, church.name, church.logo.url)
 
             serializer.save(senderId=self.request.user.personId)
         except Exception as e:
@@ -179,11 +177,12 @@ class SendBulkSMS(generics.CreateAPIView):
 
             full_message = f"{message_title}: {message_body}"
             
-            SMSService(
+            sms = SMSService(
                 recipient_numbers=phone_numbers,
                 message_body=full_message,
                 type='bulk'
-            ).start()
+            )
+            executor.submit(sms.run)
 
             serializer.save(senderId=self.request.user.personId)
             return super().perform_create(serializer)

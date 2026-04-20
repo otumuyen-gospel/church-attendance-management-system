@@ -4,6 +4,7 @@ from rest_framework import serializers
 from user.models import User
 from django.urls import reverse
 from message import EmailService
+from user.apps import executor 
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -19,12 +20,19 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         user.generate_otp()
         ### Send Verification Email
 
+        try:
+            church_logo=user.personId.churchId.logo.url if user.personId and user.personId.churchId else None
+            # Fire and forget: send email in a thread without blocking the main request thread
+            executor.submit(EmailService.send_verification_email, user.email, user.username, user.otp, church_logo)
+        except Exception as e:
+            serializers.ValidationError("Error sending verification email.")
+        '''
         EmailService.send_verification_email(
            user_email=user.email,
            user_name=user.username,
            verification_code=user.otp,
            church_logo=user.personId.churchId.logo.url if user.personId and user.personId.churchId else None
-        )
+        )'''
 
         return value
 
