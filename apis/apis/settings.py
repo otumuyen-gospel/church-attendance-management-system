@@ -71,7 +71,6 @@ INSTALLED_APPS = [
     'report',
     'message',
     'encrypted_json_fields',
-    
 ]
 
 MIDDLEWARE = [
@@ -169,6 +168,7 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS','')  # Use TLS encryption
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER','')  # Your email address
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD','')  # An app-specific password if using Gmail/similar
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','')  # Set a proper from email
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT','10'))  # Set email timeout in seconds
 
 # Site Configuration for Email Links
 SITE_URL = 'http://localhost:8000'  # Change to your production domain in production
@@ -222,7 +222,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'user':'1000/day',
-        'refresh': '10/hour',
+        'refresh': '25/hour',
         'face_login': '100/day',
         'password_login': '100/day',
         'otp_login': '100/day',
@@ -262,13 +262,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Celery Configuration
-CELERY_BROKER_URL = 'memory://'  # Use in-memory broker for development
-CELERY_RESULT_BACKEND = 'cache+memory://'  # Use cache backend for results
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'
 
 # different password hashers for better security(argon2 most secured and fastest, bcrypt is also secured and faster than default, pbkdf2 and pbkdf2sha1 are the default hashers and less secure and fast)
 #to use any of the hashers make it come first in the list

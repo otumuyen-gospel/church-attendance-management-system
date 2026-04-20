@@ -1,4 +1,7 @@
 
+from sys import exception
+import threading
+
 from .models import Message
 import re
 from .serializers import MessageSerializers
@@ -81,12 +84,13 @@ class SendSMS(generics.CreateAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            sms_service = SMSService()
-            result = sms_service.send_generic_sms(
-                phone_number=phone_number,
+            SMSService(
+                to_number=phone_number,
                 message_title=message_title,
-                message_body=message_body
-            )
+                message_body=message_body,
+                type='generic'
+            ).start() # Start the thread to send SMS asynchronously
+
             serializer.save(senderId=self.request.user.personId)
             return super().perform_create(serializer)
 
@@ -123,14 +127,18 @@ class sendEmailMSG(generics.CreateAPIView):
                 username.append(person.firstName + " " + person.lastName)
         church = Church.objects.get(
                 id=Person.objects.get(id=self.request.user.personId.id).churchId.id)
-        EmailService.send_generic_email(
-                user_email=recipients.split(','),
-                title=title,
-                detail=detail,
-                user_name=username,
-                church_name=church.name,
-                church_logo=church.logo.url)
-        serializer.save(senderId=self.request.user.personId)
+        
+        try:
+            # 2. Fire and forget: send email in a thread
+            thread = threading.Thread(
+            target=EmailService.send_generic_email, 
+            args=(recipients.split(','), username, title, detail, church.name, church.logo.url)
+            )
+            thread.start() # Thread starts, code continues immediately
+
+            serializer.save(senderId=self.request.user.personId)
+        except Exception as e:
+            return Response({'error': f'Error sending email: {str(e)}'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
             
         return super().perform_create(serializer)
 
@@ -169,12 +177,13 @@ class SendBulkSMS(generics.CreateAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            sms_service = SMSService()
             full_message = f"{message_title}: {message_body}"
-            result = sms_service.send_bulk_sms(
+            
+            SMSService(
                 recipient_numbers=phone_numbers,
-                message_body=full_message
-            )
+                message_body=full_message,
+                type='bulk'
+            ).start()
 
             serializer.save(senderId=self.request.user.personId)
             return super().perform_create(serializer)
