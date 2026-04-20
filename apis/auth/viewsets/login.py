@@ -26,6 +26,7 @@ from faces.cache import FacesCache
 from datetime import timedelta
 from django.utils.timezone import now
 from django.core.cache import cache
+from user.apps import executor
 
 class PreAuthToken(Token):
     token_type = 'pre_auth'
@@ -72,12 +73,16 @@ class FaceLoginView(ViewSet):
             ### Send Two-Factor Authentication Email
             church = Church.objects.get(id=(Person.objects.get(id=user.personId.id)
                                         .churchId.id))
-            EmailService.send_two_factor_email(
-              user_email=user.email,
-              user_name=user.username,
-              verification_code=user.otp,
-              church_logo=church.logo.url
-            )
+            
+            try:
+                # Use the executor thread pool to send the email asynchronously
+                executor.submit(EmailService.send_two_factor_email,
+                                user.email,
+                                user.username,
+                                user.otp,
+                                church.logo.url)
+            except Exception as e:
+                raise Response({"Error": "Failed to send OTP email"}, status=status.HTTP_400_BAD_REQUEST)
             
             return Response({
                 "detail": "OTP sent",
@@ -167,12 +172,16 @@ class LoginView(ViewSet):
             ### Send Two-Factor Authentication Email
             church = Church.objects.get(id=(Person.objects.get(id=user.personId.id)
                                         .churchId.id))
-            EmailService.send_two_factor_email(
-              user_email=user.email,
-              user_name=user.username,
-              verification_code=user.otp,
-              church_logo=church.logo.url
-            )
+            
+            try:
+                # Use the executor thread pool to send the email asynchronously
+                executor.submit(EmailService.send_two_factor_email,
+                                user.email,
+                                user.username,
+                                user.otp,
+                                church.logo.url)
+            except Exception as e:
+                raise Response({"Error": "Failed to send OTP email"}, status=status.HTTP_400_BAD_REQUEST)
             
             return Response({
                 "detail": "OTP sent",

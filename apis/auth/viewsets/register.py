@@ -11,6 +11,7 @@ from role.models import Role
 from message import EmailService
 from church.models import Church
 from person.models import Person
+from user.apps import executor
 
 class SignupViewset(ViewSet):
     serializer_class = SignupSerializer
@@ -43,13 +44,26 @@ class SignupViewset(ViewSet):
         # In your user registration view
         church = Church.objects.get(id=Person.objects.get(id=request.data['personId'])
                                         .churchId.id)
+        
+        try:
+                # Use the executor thread pool to send the email asynchronously
+            executor.submit(EmailService.send_welcome_email,
+                                request.data['email'],
+                               request.data['username'],
+                               church.name,
+                             role.permissions.split(','),
+                             church.logo.url)
+        except Exception as e:
+                raise Response({"Error": "Failed to send user welcome email"}, status=status.HTTP_400_BAD_REQUEST)
+       
+        '''
         EmailService.send_welcome_email(
          user_email=request.data['email'],
          user_name=request.data['username'],
          church_name=church.name,
          church_logo=church.logo.url,
          roles = role.permissions.split(',')
-        )
+        )'''
         
         return Response({"user": serializer.data,
                          "refresh": res["refresh"],
