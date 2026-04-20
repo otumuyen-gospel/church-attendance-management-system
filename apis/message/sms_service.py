@@ -1,12 +1,17 @@
 from twilio.rest import Client
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+import threading
 
-
-class SMSService:
+class SMSService(threading.Thread):
     """Service for handling SMS operations via Twilio."""
 
-    def __init__(self):
+    def __init__(self, to_number=None, message_body=None, recipient_numbers=None, message_title=None, type=None):
+        self.to_number = to_number
+        self.message_body = message_body
+        self.recipient_numbers = recipient_numbers
+        self.message_title = message_title
+        self.type = type
         """Initialize Twilio client with credentials from settings."""
         if not settings.TWILIO_ACCOUNT_SID or not settings.TWILIO_AUTH_TOKEN:
             raise ImproperlyConfigured(
@@ -21,7 +26,18 @@ class SMSService:
         self.client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
         self.from_number = settings.TWILIO_PHONE_NUMBER
 
-    def send_sms(self, to_number, message_body):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        try:
+            if self.type == 'bulk': 
+                result = self.send_bulk_sms()
+            elif self.type == 'generic':
+                result = self.send_generic_sms()
+        except Exception as e:
+            print(f"Error in SMSService thread: {str(e)}")
+
+    def send_sms(self):
         """
         Send a single SMS message.
         
@@ -37,9 +53,9 @@ class SMSService:
         """
         try:
             message = self.client.messages.create(
-                body=message_body,
+                body=self.message_body,
                 from_=self.from_number,
-                to=to_number
+                to=self.to_number
             )
             return {
                 'success': True,
@@ -55,26 +71,28 @@ class SMSService:
                 'message': 'Failed to send SMS'
             }
 
-    def send_bulk_sms(self, recipient_numbers, message_body):
+    def send_bulk_sms(self):
         """
         Send SMS to multiple recipients.
         
         Args:
             recipient_numbers: List of phone numbers (e.g., ['+1234567890', '+0987654321'])
             message_body: The SMS message content
+            message_title: Title/subject of the message
         
         Returns:
             Dictionary with results for each recipient
         """
         results = {
-            'total': len(recipient_numbers),
+            'total': len(self.recipient_numbers),
             'successful': 0,
             'failed': 0,
             'details': []
         }
         
-        for to_number in recipient_numbers:
-            result = self.send_sms(to_number, message_body)
+        for to_number in self.recipient_numbers:
+            self.to_number = to_number
+            result = self.send_sms()
             results['details'].append(result)
             
             if result['success']:
@@ -84,7 +102,7 @@ class SMSService:
         
         return results
 
-    def send_generic_sms(self, phone_number, message_title, message_body):
+    def send_generic_sms(self):
         """
         Send a generic SMS message.
         
@@ -96,5 +114,6 @@ class SMSService:
         Returns:
             Response from send_sms method
         """
-        full_message = f"{message_title}: {message_body}"
-        return self.send_sms(phone_number, full_message)
+        full_message = f"{self.message_title}: {self.message_body}"
+        self.message_body = full_message
+        return self.send_sms()
