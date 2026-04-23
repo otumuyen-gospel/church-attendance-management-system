@@ -16,7 +16,7 @@ import face_recognition
 import numpy as np
 import cv2
 from mtcnn_cv2 import MTCNN
-import mediapipe as mp
+from faces.apps import FacesConfig
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 from rest_framework.response import Response
 from rest_framework import status
@@ -61,7 +61,6 @@ def process_image_encoding_2(file):
     # num_jitters=1 is much faster than 10
     encodings = face_recognition.face_encodings(small_frame, face_locations, num_jitters=1)
     return encodings[0] if encodings else None
-'''
 
 # faster and more accurate
 def process_image_encoding_3(file):
@@ -77,7 +76,7 @@ def process_image_encoding_3(file):
   # 2. Resizing Logic: Scale down for speed (0.25 = 1/4 size)
   scale_factor = 0.25
   small_image = cv2.resize(full_image, (0, 0), fx=scale_factor, fy=scale_factor)
-
+  
   # 3. Detect faces on the smaller image
   results = detector.detect_faces(small_image)
 
@@ -97,7 +96,10 @@ def process_image_encoding_3(file):
   # 5. Encode using the original full-resolution image
   # This ensures accuracy isn't lost during the recognition phase
   encodings = face_recognition.face_encodings(full_image, known_face_locations=face_locations, num_jitters=1)
+
   return encodings[0] if encodings else None
+
+  '''
 
 
 class FacesList(generics.ListAPIView):
@@ -164,7 +166,7 @@ class UpdateFaces(generics.GenericAPIView):
          # Process images sequentially 
         all_encodings = []
         for file in image_files:
-           encoding= process_image_encoding_3(file)
+           encoding= FacesConfig.face_handler.get_embedding(file.read())
            if encoding is not None:
                all_encodings.append(encoding)
 
@@ -222,10 +224,10 @@ class CreateFaces(generics.GenericAPIView):
         # Process images sequentially 
         all_encodings = []
         for file in image_files:
-           encoding = process_image_encoding_3(file)
+           encoding = FacesConfig.face_handler.get_embedding(file.read())
            if encoding is not None:
                all_encodings.append(encoding)
-
+        
         if not all_encodings:
             return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -234,7 +236,7 @@ class CreateFaces(generics.GenericAPIView):
 
         #create new face record for the person
         Faces.objects.create(personId=personId, encoding=avg_encoding, pics=frontview)
-    
+        
         return Response({
             "message": f"Face created for {personId.firstName} {personId.lastName}",
         }, status=status.HTTP_201_CREATED)
@@ -295,7 +297,7 @@ class RecognizeFaceView(generics.GenericAPIView):
             return Response({"message" : f"Attendance can only be captured for today's services. The event date for {services.eventName} is {services.eventDate} {services.eventDay} {services.eventTime}."})
 
         # Load uploaded image and get encoding
-        unknown_encoding = process_image_encoding_3(file)
+        unknown_encoding = FacesConfig.face_handler.get_embedding(file.read())
         if not unknown_encoding.any():
             return Response({"message": "Please upload an image with a face"}, status=status.HTTP_404_NOT_FOUND)
 
