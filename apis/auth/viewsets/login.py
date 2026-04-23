@@ -20,6 +20,7 @@ from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework import serializers
 from faces.models import Faces
+from faces.views import process_image_encoding_3
 import face_recognition
 import numpy as np
 from faces.cache import FacesCache
@@ -98,14 +99,10 @@ class FaceLoginView(ViewSet):
         if not file:
             raise serializers.ValidationError({"pics": "No image uploaded"})
         
-        #Get face Encoding
-        img = face_recognition.load_image_file(file)
-        unknown_encodings = face_recognition.face_encodings(img, num_jitters=10)
-
-        if not unknown_encodings:
-            raise serializers.ValidationError({"Error": "Please upload an image with a face"})
-
-        unknown_encoding = unknown_encodings[0]
+        # Load uploaded image and get encoding
+        unknown_encoding = process_image_encoding_3(file)
+        if not unknown_encoding.any():
+            return Response({"message": "Please upload an image with a face"}, status=status.HTTP_404_NOT_FOUND)
 
         # Get all known faces from cache
         known_encodings = FacesCache.get_all_encodings()
