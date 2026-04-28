@@ -1,6 +1,5 @@
 
 from sys import exception
-import threading
 
 from .models import Message
 import re
