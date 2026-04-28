@@ -39,6 +39,6 @@ class SystemMonitorMiddleware(MiddlewareMixin):
         response['X-Api-CPU-Usage'] = f"{normalized_cpu:.2f}%"
 
         # You can also log this data here
-        #print(f"CPU: {request.cpu_percent}%, Mem: {request.memory_info}%, Time: {duration:.2f}s, Django Mem: {mem_in_mb:.2f} MB ({django_percentage:.2f}%)")
+        # print(f"api-page-time: {duration:.2f}s, api-Mem-usage: {mem_in_mb:.2f} MB ({django_percentage:.2f}%), api-CPU-Usage:{normalized_cpu:.2f}%")
 
         return response
