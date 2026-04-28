@@ -2,6 +2,7 @@ import os
 import tempfile
 
 from django.shortcuts import render
+from fontTools import encodings
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
@@ -27,85 +28,10 @@ from services.models import Services
 from capturemethod.models import CaptureMethod
 from django.utils import timezone
 
-'''
-####### OLD ENCODING FUNCTIONS - KEPT FOR REFERENCE #######
-#slower but more accurate encoding by not resizing image and using num_filter=10
-def process_image_encoding(file):
-    if isinstance(file, InMemoryUploadedFile):
-      pass # file is already in mmory no need to save to disk
-    elif isinstance(file, TemporaryUploadedFile):
-      file = file.temporary_file_path()
-
-    """
-    Process a single image file to get face encoding.
-    Returns the encoding or None if no face found.
-    """
-    try:
-        img = face_recognition.load_image_file(file)
-        encodings = face_recognition.face_encodings(img, num_jitters=10)
-        return encodings[0] if encodings else None
-    except Exception:
-        return None
-
-#faster but less accurate encoding by resizing image and using num_filter=1
-def process_image_encoding_2(file):
-    # 1. Faster Image Load
-    img = cv2.imread(file.temporary_file_path())
-    rgb_frame = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    # 2. Resize frame
-    small_frame = cv2.resize(rgb_frame, (0, 0), fx=0.25, fy=0.25)
-
-    # 3. Use faster detection + reduced jitters
-    face_locations = face_recognition.face_locations(small_frame)
-    # num_jitters=1 is much faster than 10
-    encodings = face_recognition.face_encodings(small_frame, face_locations, num_jitters=1)
-    return encodings[0] if encodings else None
-
-# faster and more accurate
-def process_image_encoding_3(file):
-  if isinstance(file, InMemoryUploadedFile):
-      pass # file is already in mmory no need to save to disk
-  elif isinstance(file, TemporaryUploadedFile):
-      file = file.temporary_file_path()
-
-  # 1. Initialize detector and load image
-  detector = MTCNN(min_face_size= 80)
-  full_image = face_recognition.load_image_file(file)
-
-  # 2. Resizing Logic: Scale down for speed (0.25 = 1/4 size)
-  scale_factor = 0.25
-  small_image = cv2.resize(full_image, (0, 0), fx=scale_factor, fy=scale_factor)
-  
-  # 3. Detect faces on the smaller image
-  results = detector.detect_faces(small_image)
-
-  # 4. Map locations back to original scale
-  face_locations = []
-  for res in results:
-     x, y, w, h = res['box']
-    
-     # Scale coordinates back up (divide by scale_factor)
-     top = int(y / scale_factor)
-     right = int((x + w) / scale_factor)
-     bottom = int((y + h) / scale_factor)
-     left = int(x / scale_factor)
-    
-     face_locations.append((top, right, bottom, left))
-
-  # 5. Encode using the original full-resolution image
-  # This ensures accuracy isn't lost during the recognition phase
-  encodings = face_recognition.face_encodings(full_image, known_face_locations=face_locations, num_jitters=1)
-
-  return encodings[0] if encodings else None
-
-  '''
-
-
 class FacesList(generics.ListAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
-    permission_classes = [IsAuthenticated, IsInGroup,]
+    permission_classes = [IsAuthenticated, IsInGroup]
     required_groups = requiredGroups(permission='view_faces')
     name = 'faces-list'
 
@@ -123,7 +49,7 @@ class FacesList(generics.ListAPIView):
 
 class CacheFaces(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsInGroup]
-    reuired_groups = requiredGroups(permission='add_faces')
+    required_groups = requiredGroups(permission='add_faces')
     name='cache-faces'
     def post(self, request, *args, **kwargs):
         # Get all Faces from database
@@ -174,13 +100,16 @@ class UpdateFaces(generics.GenericAPIView):
             return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Average the encodings for better accuracy
-        avg_encoding = np.mean(all_encodings, axis=0).tolist()
+        master_encoding = np.mean(np.array(all_encodings), axis=0)
+        
+        # Normalize the averaged vector (Crucial for cosine similarity)
+        master_encoding = master_encoding / np.linalg.norm(master_encoding)
+
         #update existing face record for the person
         face = face.first()
-        face.encoding=avg_encoding
+        face.encoding=master_encoding.tolist()
         face.pics=frontview
         face.save()
-        
         return Response({
             "message": f"Face updated for {personId.firstName} {personId.lastName}",
         }, status=status.HTTP_201_CREATED)
@@ -231,11 +160,13 @@ class CreateFaces(generics.GenericAPIView):
         if not all_encodings:
             return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Average the encodings for better accuracy
-        avg_encoding = np.mean(all_encodings, axis=0).tolist()
+        master_encoding = np.mean(np.array(all_encodings), axis=0)
+        
+        # Normalize the averaged vector (Crucial for cosine similarity)
+        master_encoding = master_encoding / np.linalg.norm(master_encoding)
 
         #create new face record for the person
-        Faces.objects.create(personId=personId, encoding=avg_encoding, pics=frontview)
+        Faces.objects.create(personId=personId, encoding=master_encoding.tolist(), pics=frontview)
         
         return Response({
             "message": f"Face created for {personId.firstName} {personId.lastName}",
@@ -296,29 +227,24 @@ class RecognizeFaceView(generics.GenericAPIView):
         if services.eventDate != timezone.now().date() and services.eventDay != timezone.now().strftime('%a').upper():
             return Response({"message" : f"Attendance can only be captured for today's services. The event date for {services.eventName} is {services.eventDate} {services.eventDay} {services.eventTime}."})
 
-        # Load uploaded image and get encoding
+        # Load uploaded image and get encoding and normalize it
         unknown_encoding = FacesConfig.face_handler.get_embedding(file.read())
-        if not unknown_encoding.any():
+        if not unknown_encoding:
             return Response({"message": "Please upload an image with a face"}, status=status.HTTP_404_NOT_FOUND)
 
         # Get all known faces from cache
         known_encodings = FacesCache.get_all_encodings()
-        known_names = FacesCache.get_face_names()
         known_face_ids = FacesCache.get_face_ids()
 
         if not known_encodings:
             return Response({"message": "No known faces in database(cache is empty)"}, status=status.HTTP_404_NOT_FOUND)
-
-        # Compare
-        results = face_recognition.compare_faces(known_encodings, unknown_encoding,tolerance=0.4)
-        face_distances = face_recognition.face_distance(known_encodings, unknown_encoding)
-
-        best_match_index = np.argmin(face_distances)
-        if results[best_match_index]:
-            matched_face_id = known_face_ids[int(best_match_index)]
+        # Compare faces
+        best_index, score = FacesConfig.face_handler.find_best_match(known_encodings, unknown_encoding)
+        if best_index is not None and score >= 0.4: # Threshold for a match:
+            matched_face_id = known_face_ids[best_index]
             matched_face = Faces.objects.get(id=matched_face_id)
             person = matched_face.personId
             # Capture attendance
-            return self.capture_attendance(person.id, services, float(face_distances[best_match_index]))
+            return self.capture_attendance(person.id, services, float(score))
 
         return Response({"match": False, "message": "Unknown person(face not recognized)"}, status=status.HTTP_404_NOT_FOUND)
