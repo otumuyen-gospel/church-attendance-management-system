@@ -217,48 +217,6 @@ TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')    # Your Auth Token
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '') # Your Twilio Phone Number (e.g., +1234567890)
 
 
-# Actual directory user backups files go to
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-#used on production with whitenoise
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "dbbackup": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-        "OPTIONS": {
-            'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')
-        },
-     "staticfiles": {
-        "BACKEND": 'whitenoise.storage.CompressedManifestStaticFilesStorage',
-    },
-    },
-}
-
-'''
-#used on Local Development only
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "dbbackup": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-        "OPTIONS": {
-            'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')
-        },
-     "staticfiles": {
-        "BACKEND": 'django.contrib.staticfiles.storage.StaticFilesStorage',
-    },
-    },
-}
-'''
-
-
 DBBACKUP_FILENAME_TEMPLATE = 'backup_db_{datetime}.sql'
 DBBACKUP_MEDIA_FILENAME_TEMPLATE = 'backup_file_{datetime}.tar'
 #DBBACKUP_STORAGE_OPTIONS = {'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')}
@@ -337,6 +295,49 @@ LOGGING = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Actual directory user backups files go to
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+#used on production with whitenoise
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "dbbackup": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')
+        },
+     "staticfiles": {
+        "BACKEND": 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+    },
+}
+
+'''
+#used on Local Development only
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "dbbackup": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')
+        },
+     "staticfiles": {
+        "BACKEND": 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+    },
+}
+'''
+
 
 
 # different password hashers for better security(argon2 most secured and fastest, bcrypt is also secured and faster than default, pbkdf2 and pbkdf2sha1 are the default hashers and less secure and fast)
