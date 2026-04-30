@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     'report',
     'message',
     'encrypted_json_fields',
+    'django.contrib.staticfiles',
 ]
 
 MIDDLEWARE = [
