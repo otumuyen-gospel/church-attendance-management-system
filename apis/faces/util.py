@@ -4,12 +4,12 @@ import os
 import cv2
 from django_extensions import settings
 import numpy as np
-from insightface.app import FaceAnalysis
 
 class FaceRecognitionHandler:
     _instance = None
 
     def __new__(cls):
+        from insightface.app import FaceAnalysis
         if cls._instance is None:
             cls._instance = super(FaceRecognitionHandler, cls).__new__(cls)
             # buffalo_l is the high-accuracy model; use buffalo_s for speed
