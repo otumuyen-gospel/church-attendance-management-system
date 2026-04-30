@@ -100,14 +100,6 @@ MIDDLEWARE = [
     'auditlog.middleware.AuditlogMiddleware',
 ]
 
-
-# 2. Configure Static Storage
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# 3. Enable compression and caching (optional but recommended)
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-
 if not DEBUG:  # Only apply these in production
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
@@ -225,6 +217,10 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '') # Your Twilio Ph
 
 
 # Actual directory user backups files go to
+STATFile = '"django.contrib.staticfiles.storage.StaticFilesStorage"'
+if not DEBUG:
+    STATFile = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -235,7 +231,7 @@ STORAGES = {
             'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')
         },
      "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": STATFile,
     },
     },
 }
