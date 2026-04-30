@@ -216,17 +216,6 @@ TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')  # Your Account SI
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')    # Your Auth Token
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '') # Your Twilio Phone Number (e.g., +1234567890)
 
-
-DBBACKUP_FILENAME_TEMPLATE = 'backup_db_{datetime}.sql'
-DBBACKUP_MEDIA_FILENAME_TEMPLATE = 'backup_file_{datetime}.tar'
-#DBBACKUP_STORAGE_OPTIONS = {'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')}
-#DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
-
-MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'uploads')
-
-# URL used to access the media
-MEDIA_URL = '/media/'
-
 #custom user
 AUTH_USER_MODEL = 'user.User'
 
@@ -305,24 +294,20 @@ STATICFILES_DIRS = [
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 #used on production with whitenoise
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "dbbackup": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-        "OPTIONS": {
-            'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')
-        },
-     "staticfiles": {
-        "BACKEND": 'whitenoise.storage.CompressedManifestStaticFilesStorage',
-    },
-    },
-}
+DBBACKUP_FILENAME_TEMPLATE = 'backup_db_{datetime}.sql'
+DBBACKUP_MEDIA_FILENAME_TEMPLATE = 'backup_file_{datetime}.tar'
+MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'uploads')
+# URL used to access the media
+MEDIA_URL = '/media/'
 
-'''
-#used on Local Development only
-STORAGES = {
+if RENDER_EXTERNAL_HOSTNAME:
+     DBBACKUP_STORAGE_OPTIONS = {'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')}
+     DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+     DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+else:
+    #used on Local Development only
+    STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
@@ -335,10 +320,7 @@ STORAGES = {
         "BACKEND": 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
     },
-}
-'''
-
-
+    }
 
 # different password hashers for better security(argon2 most secured and fastest, bcrypt is also secured and faster than default, pbkdf2 and pbkdf2sha1 are the default hashers and less secure and fast)
 #to use any of the hashers make it come first in the list
