@@ -21,7 +21,6 @@ from rest_framework.views import APIView
 from rest_framework import serializers
 from faces.models import Faces
 from faces.apps import FacesConfig
-import numpy as np
 from faces.cache import FacesCache
 from datetime import timedelta
 from django.utils.timezone import now

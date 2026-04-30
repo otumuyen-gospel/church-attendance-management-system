@@ -1,3 +1,11 @@
+import sys
+from unittest.mock import MagicMock
+
+# Mock matplotlib so InsightFace can't actually trigger it
+sys.modules["matplotlib"] = MagicMock()
+sys.modules["matplotlib.pyplot"] = MagicMock()
+
+
 """
 WSGI config for apis project.
 

@@ -10,6 +10,8 @@ class FaceRecognitionHandler:
 
     def __new__(cls):
         from insightface.app import FaceAnalysis
+        import gc
+        gc.collect() # Clear memory before loading the heavy model
         if cls._instance is None:
             cls._instance = super(FaceRecognitionHandler, cls).__new__(cls)
             # buffalo_l is the high-accuracy model; use buffalo_s for speed

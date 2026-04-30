@@ -14,8 +14,6 @@ from person.models import Person
 from .serializers import FacesSerializers, RecognizeFaceSerializer, CreateFaceSerializer
 
 import numpy as np
-import cv2
-from mtcnn_cv2 import MTCNN
 from faces.apps import FacesConfig
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 from rest_framework.response import Response
