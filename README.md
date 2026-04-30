@@ -23,16 +23,25 @@ A Backend API designed to help church track and manage membership and attendance
      - [SMS Setup](apis/SMS_SETUP_SUMMARY.md)
      - [Twilio SMS Setup](apis/TWILIO_SMS_SETUP.md)
 
-4. **Run migrations**:
+4. **Install API documentation dependencies**:
    ```bash
    cd apis
+   pip install -r requirements.txt
+   ```
+
+5. **Run migrations** (if needed):
+   ```bash
    python manage.py migrate
    ```
 
-5. **Start the server**:
+6. **Start the server**:
    ```bash
    python manage.py runserver
    ```
+
+7. **Access API documentation**:
+   - Swagger UI: `http://localhost:8000/api/schema/swagger-ui/`
+   - ReDoc: `http://localhost:8000/api/schema/redoc/`
 
 ## Authentication
 
@@ -145,6 +154,16 @@ Example error response:
    GET /report/attendance-report/
    Authorization: Bearer <token>
    ```
+
+## API Documentation Access
+
+The API uses OpenAPI 3.0 specification and provides interactive documentation:
+
+- **Swagger UI**: `GET /api/schema/swagger-ui/` — Interactive API documentation
+- **ReDoc**: `GET /api/schema/redoc/` — Alternative documentation viewer
+- **OpenAPI Schema**: `GET /api/schema/` — Raw OpenAPI JSON schema
+
+These endpoints are automatically generated from your Django REST Framework views using drf-spectacular.
 
 ## API Documentation
 

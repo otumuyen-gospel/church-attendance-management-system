@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
+import dj_database_url
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -34,7 +35,20 @@ EJF_ENCRYPTION_KEYS = [
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 't')
 
-ALLOWED_HOSTS = ['192.168.1.5', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = []
+
+# Get the Render URL (e.g., ://onrender.com)
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '*')
+
+if RENDER_EXTERNAL_HOSTNAME:
+    # This adds the Render URL to allowed hosts
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    
+    # Required for Django 4.0+ to prevent "CSRF verification failed"
+    CSRF_TRUSTED_ORIGINS = [f'https://{RENDER_EXTERNAL_HOSTNAME}']
+else:
+    # Fallback for local development
+    ALLOWED_HOSTS = ['192.168.1.5', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -76,6 +90,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'user.TraceMemoryLeakMiddleWare.SystemMonitorMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -84,6 +99,21 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'auditlog.middleware.AuditlogMiddleware',
 ]
+
+
+# 2. Configure Static Storage
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# 3. Enable compression and caching (optional but recommended)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+if not DEBUG:  # Only apply these in production
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 
 ROOT_URLCONF = 'apis.urls'
 
@@ -107,9 +137,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'apis.wsgi.application'
 
 
-# Database
+# Database Local PostgreSQL
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+'''
 DATABASES = {
     'default': {
         'ENGINE': os.environ.get('ENGINE',''),
@@ -119,6 +149,17 @@ DATABASES = {
         'HOST': os.environ.get('HOST',''),
         'PORT': os.environ.get('PORT',''),
     }
+}
+'''
+
+# superbase cloud PostgreSQL Connection
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        # Use SSL locally and on Render (required by Supabase)
+        ssl_require=True
+    )
 }
 
 # Face Recognition Cache
@@ -172,7 +213,7 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','')  # Set a proper fro
 EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT','10'))  # Set email timeout in seconds
 
 # Site Configuration for Email Links
-SITE_URL = 'http://localhost:8000'  # Change to your production domain in production
+SITE_URL = RENDER_EXTERNAL_HOSTNAME or 'http://localhost:8000'  # Change to your production domain in production
 SITE_NAME = 'Church Membership and Attendance Management System'
 
 
@@ -256,7 +297,21 @@ SIMPLE_JWT = {
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+#STATIC_URL = 'static/'
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
