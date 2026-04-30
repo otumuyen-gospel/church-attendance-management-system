@@ -221,6 +221,7 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '') # Your Twilio Ph
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+#used on production with whitenoise
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -231,10 +232,30 @@ STORAGES = {
             'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')
         },
      "staticfiles": {
-        "BACKEND": DEBUG if 'django.contrib.staticfiles.storage.StaticFilesStorage' else 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        "BACKEND": 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
     },
 }
+
+'''
+#used on Local Development only
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "dbbackup": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')
+        },
+     "staticfiles": {
+        "BACKEND": 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+    },
+}
+'''
+
+
 DBBACKUP_FILENAME_TEMPLATE = 'backup_db_{datetime}.sql'
 DBBACKUP_MEDIA_FILENAME_TEMPLATE = 'backup_file_{datetime}.tar'
 #DBBACKUP_STORAGE_OPTIONS = {'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')}
