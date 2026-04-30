@@ -1,3 +1,11 @@
+import os
+# Force Matplotlib to use a tiny, non-interactive backend
+os.environ['MPLBACKEND'] = 'Agg'
+# Point the config to /tmp so it doesn't try to build a persistent cache
+os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib_cfg'
+
+
+
 """
 Django settings for apis project.
 
@@ -11,7 +19,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-import os
 from datetime import timedelta
 import dj_database_url
 from dotenv import load_dotenv
