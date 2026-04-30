@@ -13,7 +13,6 @@ from .models import Faces
 from person.models import Person
 from .serializers import FacesSerializers, RecognizeFaceSerializer, CreateFaceSerializer
 
-import face_recognition
 import numpy as np
 import cv2
 from mtcnn_cv2 import MTCNN
