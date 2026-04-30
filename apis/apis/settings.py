@@ -219,12 +219,7 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '') # Your Twilio Ph
 
 # Actual directory user backups files go to
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATFile = ''
-if not DEBUG:
-    STATFile = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-else:
-    STATFile = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STORAGES = {
     "default": {
@@ -236,7 +231,7 @@ STORAGES = {
             'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')
         },
      "staticfiles": {
-        "BACKEND": STATFile,
+        "BACKEND": DEBUG if 'django.contrib.staticfiles.storage.StaticFilesStorage' else 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
     },
 }
