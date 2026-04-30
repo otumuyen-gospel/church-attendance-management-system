@@ -212,8 +212,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD','')  # An app-specifi
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','')  # Set a proper from email
 EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT','10'))  # Set email timeout in seconds
 
-# Site Configuration for Email Links
-SITE_URL = RENDER_EXTERNAL_HOSTNAME or 'http://localhost:8000'  # Change to your production domain in production
+# Site Configuration for Email Links in production
 SITE_NAME = 'Church Membership and Attendance Management System'
 
 
