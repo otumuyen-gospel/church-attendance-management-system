@@ -21,5 +21,6 @@ urlpatterns = [
     path('otp-verification/', OTPVerificationAPIView.as_view(), name='verify'),
     path('password-reset/', PasswordResetAPIView.as_view(), name='password'),
     path('user-log-entries/', LogEntryViews.as_view(), name='Log Entries'),
+    path('healthz/', health_check),
 
 ]

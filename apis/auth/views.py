@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -83,3 +84,9 @@ class LogEntryViews(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsInGroup]
     required_groups = ['admin',]
     name = 'user-logs'
+
+
+
+
+def health_check(request):
+    return HttpResponse("OK", status=200)
