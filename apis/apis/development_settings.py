@@ -7,7 +7,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['192.168.1.5', 'localhost', '127.0.0.1']
 
-'''
+
 #use offline local disk postgreSQL Connection
 DATABASES = {
     'default': {
@@ -19,9 +19,10 @@ DATABASES = {
         'PORT': os.environ.get('PORT',''),
     }
 }
-'''
+
 
 # online superbase cloud PostgreSQL Connection
+'''
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv('DATABASE_URL'),
@@ -30,6 +31,7 @@ DATABASES = {
         ssl_require=True
     )
 }
+'''
 
 #used on Local Development only
 STORAGES = {

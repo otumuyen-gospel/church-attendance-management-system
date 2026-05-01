@@ -1,9 +1,6 @@
 import os
 import sys
 
-# Use non-interactive Matplotlib backend so GUI code does not require a display.
-os.environ.setdefault("MPLBACKEND", "Agg")
-
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
 

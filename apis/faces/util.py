@@ -16,7 +16,7 @@ class FaceRecognitionHandler:
             cls._instance = super(FaceRecognitionHandler, cls).__new__(cls)
             # buffalo_l is the high-accuracy model; use buffalo_s for speed
             model_path = os.path.join(settings.BASE_DIR, 'models') 
-            cls._instance.app = FaceAnalysis(name='buffalo_s', root=model_path, providers=['CPUExecutionProvider'], allowed_modules=['detection', 'recognition'])
+            cls._instance.app = FaceAnalysis(name='buffalo_sc', root=model_path, providers=['CPUExecutionProvider'], allowed_modules=['detection', 'recognition'])
             cls._instance.app.prepare(ctx_id=0, det_size=(224, 224), det_thresh=0.65)
         return cls._instance
 
