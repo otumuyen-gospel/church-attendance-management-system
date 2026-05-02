@@ -47,12 +47,16 @@ class SignupViewset(ViewSet):
         
         try:
                 # Use the executor thread pool to send the email asynchronously
+            if church.logo:
+                    url = church.logo.url
+            else:
+                    url = None
             executor.submit(EmailService.send_welcome_email,
                                 request.data['email'],
                                request.data['username'],
                                church.name,
                              role.permissions.split(','),
-                             church.logo.url)
+                             url)
         except Exception as e:
                 raise Response({"Error": "Failed to send user welcome email"}, status=status.HTTP_400_BAD_REQUEST)
        

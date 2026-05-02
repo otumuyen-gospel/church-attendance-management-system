@@ -21,9 +21,13 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         ### Send Verification Email
 
         try:
-            church_logo=user.personId.churchId.logo.url if user.personId and user.personId.churchId else None
+            church_logo=user.personId.churchId.logo if user.personId and user.personId.churchId else None
+            if church_logo:
+                    url = church_logo.url
+            else:
+                    url = None
             # Fire and forget: send email in a thread without blocking the main request thread
-            executor.submit(EmailService.send_verification_email, user.email, user.username, user.otp, church_logo)
+            executor.submit(EmailService.send_verification_email, user.email, user.username, user.otp, url)
         except Exception as e:
             serializers.ValidationError("Error sending verification email.")
         '''

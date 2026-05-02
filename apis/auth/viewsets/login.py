@@ -75,11 +75,15 @@ class FaceLoginView(ViewSet):
             
             try:
                 # Use the executor thread pool to send the email asynchronously
+                if church.logo:
+                    url = church.logo.url
+                else:
+                    url = None
                 executor.submit(EmailService.send_two_factor_email,
                                 user.email,
                                 user.username,
                                 user.otp,
-                                church.logo.url)
+                                url)
             except Exception as e:
                 raise Response({"Error": "Failed to send OTP email"}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -167,11 +171,15 @@ class LoginView(ViewSet):
             
             try:
                 # Use the executor thread pool to send the email asynchronously
+                if church.logo:
+                    url = church.logo.url
+                else:
+                    url = None
                 executor.submit(EmailService.send_two_factor_email,
                                 user.email,
                                 user.username,
                                 user.otp,
-                                church.logo.url)
+                                url)
             except Exception as e:
                 raise Response({"Error": "Failed to send OTP email"}, status=status.HTTP_400_BAD_REQUEST)
             

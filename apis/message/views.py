@@ -131,7 +131,11 @@ class sendEmailMSG(generics.CreateAPIView):
         
         try:
             # Fire and forget: send email in a thread without blocking the main request thread
-            executor.submit(EmailService.send_generic_email, recipients.split(','), username, title, detail, church.name, church.logo.url)
+            if church.logo:
+                url = church.logo.url
+            else:
+                url = None
+            executor.submit(EmailService.send_generic_email, recipients.split(','), username, title, detail, church.name,url )
 
             serializer.save(senderId=self.request.user.personId)
         except Exception as e:

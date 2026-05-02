@@ -5,6 +5,8 @@ import dj_database_url
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+SITE_URL = os.environ.get('SITE_URL',"https://agc-alimosho-church-apis.onrender.com")
+
 ALLOWED_HOSTS = []
 # Get the Render URL (e.g., ://onrender.com)
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '*')

@@ -6,7 +6,7 @@ import dj_database_url
 DEBUG = True
 
 ALLOWED_HOSTS = ['192.168.1.5', 'localhost', '127.0.0.1']
-
+SITE_URL = "http://localhost:8000"
 
 #use offline local disk postgreSQL 
 '''

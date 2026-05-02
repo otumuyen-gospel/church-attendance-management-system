@@ -77,7 +77,8 @@ class UpdateUser(generics.UpdateAPIView):
               user.groups.remove(group)
               user.groups.add(new_group)
               return self.updateProps(obj=obj, role=role)
-        return obj
+        else:
+              return obj
 
     def updateProps(self, obj, role):
         if role.name == 'admin':
@@ -86,6 +87,7 @@ class UpdateUser(generics.UpdateAPIView):
         else:
             obj.is_staff = False
             obj.is_superuser = False
+            
         return obj
     
 
