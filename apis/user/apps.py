@@ -20,7 +20,7 @@ class UserConfig(AppConfig):
         global executor
 
         # Initialize the executor
-        executor = ThreadPoolExecutor(max_workers=3)
+        executor = ThreadPoolExecutor(max_workers=2)
         # Register the cleanup function
         atexit.register(self.cleanup)
 
