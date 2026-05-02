@@ -5,7 +5,6 @@ os.environ['MPLBACKEND'] = 'Agg'
 os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib_cfg'
 
 
-
 """
 Django settings for apis project.
 
@@ -74,6 +73,7 @@ INSTALLED_APPS = [
     'message',
     'encrypted_json_fields',
     'django.contrib.staticfiles',
+    'storages',
 ]
 
 MIDDLEWARE = [

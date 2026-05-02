@@ -30,7 +30,16 @@ DATABASES = {
 }
 
 # only in production
-DBBACKUP_STORAGE_OPTIONS = {'location': os.path.join(os.path.dirname(BASE_DIR), 'uploads')}
-DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+
+DBBACKUP_STORAGE_OPTIONS = {'location':'uploads', 'default_acl': 'private'}
+DBBACKUP_STORAGE = os.environ.get('DEFAULT_FILE_STORAGE')
+
+# Supabase S3 upload storage Configuration
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+# Tell Django to use S3 for media files in production
+DEFAULT_FILE_STORAGE = os.environ.get('DEFAULT_FILE_STORAGE')
