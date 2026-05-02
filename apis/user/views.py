@@ -53,8 +53,7 @@ class UpdateUser(generics.UpdateAPIView):
     def get_object(self):
         obj = super().get_object()
         if self.request.user.is_superuser: 
-            self.updateUserGroup(obj)
-            return obj
+            return self.updateUserGroup(obj)
         elif obj == self.request.user:
             #allow users to update their own profile but not role
             return self.keepUserGroup(obj)
@@ -77,8 +76,9 @@ class UpdateUser(generics.UpdateAPIView):
             if group in user.groups.all():
               user.groups.remove(group)
               user.groups.add(new_group)
-              self.updateProps(obj=obj, role=role)
-              
+              return self.updateProps(obj=obj, role=role)
+        return obj
+
     def updateProps(self, obj, role):
         if role.name == 'admin':
             obj.is_staff = True
@@ -86,6 +86,7 @@ class UpdateUser(generics.UpdateAPIView):
         else:
             obj.is_staff = False
             obj.is_superuser = False
+        return obj
     
 
 
