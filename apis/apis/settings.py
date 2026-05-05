@@ -2,13 +2,11 @@ from dotenv import load_dotenv
 import os
 # Load environment variables from .env file
 load_dotenv()
-environment = os.environ.get('APP_ENV','local')
+environment = os.environ.get('APP_ENV')
 if environment == "local":
     from .development_settings import *
 elif environment == 'production':
     from  .production_settings import *
-
-
 
 
 

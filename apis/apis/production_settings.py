@@ -5,7 +5,7 @@ import dj_database_url
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-SITE_URL = os.environ.get('SITE_URL',"https://agc-alimosho-church-apis.onrender.com")
+SITE_URL = os.environ.get('SITE_URL_PRODUCTION',"https://agc-alimosho-church-apis.onrender.com")
 
 ALLOWED_HOSTS = []
 # Get the Render URL (e.g., ://onrender.com)
@@ -32,10 +32,10 @@ DATABASES = {
 }
 
 # only in production
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATICFILES_STORAGE = os.environ.get("STATICFILES_STORAGE_WHITENOISE")
 
 DBBACKUP_STORAGE_OPTIONS = {'location':'uploads', 'default_acl': 'private'}
-DBBACKUP_STORAGE = os.environ.get('DEFAULT_FILE_STORAGE')
+DBBACKUP_STORAGE = os.environ.get('DEFAULT_FILE_STORAGE_SUPERBASE')
 
 # Supabase S3 upload storage Configuration
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
@@ -44,4 +44,4 @@ AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 # Tell Django to use S3 for media files in production
-DEFAULT_FILE_STORAGE = os.environ.get('DEFAULT_FILE_STORAGE')
+DEFAULT_FILE_STORAGE = os.environ.get('DEFAULT_FILE_STORAGE_SUPERBASE')

@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'encrypted_json_fields',
     'django.contrib.staticfiles',
     'storages',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -176,7 +177,36 @@ AUTH_USER_MODEL = 'user.User'
 
 #rest framework settings
 
+SPECTACULAR_SETTINGS = {
+    # Add this line to allow user access the Docs by logining into /admin/ 
+    'SERVE_AUTHENTICATION': [
+        'rest_framework.authentication.SessionAuthentication', 
+    ],
+    'TITLE': 'Church Attendance and Membership Management API',
+    'DESCRIPTION': 'Church attendance and membership and management system helps church track attendance and membership using AI Face Recognition',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+
+    # 1. Shows the "Authorize" button so devs can test live
+    'SECURITY': [{'jwtAuth': []}],
+    'APPEND_COMPONENTS': {
+        "securitySchemes": {
+            "jwtAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+
+    # 2. Recommended: Keep the docs private to the team
+    # This prevents random internet users from seeing your API structure
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.IsAuthenticated'],
+}
+
+
 REST_FRAMEWORK = {
+'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
 'PAGE_SIZE':10,
 'MAX_PAGE_SIZE':10,
