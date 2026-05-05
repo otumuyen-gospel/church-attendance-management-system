@@ -121,7 +121,7 @@ class Analytics(APIView):
                              "leadership_status": leadership_status, "annual_growth": annual_membership_statistics, 
                              "current_year_monthly_growth": current_year_monthly_membership_statistics, "today_attendance": today_attendance }, status=200)
         except Exception as e:
-            return Response({"error": str(e)}, status=500)
+            return Response({"error": "Please ensure there are values in the database tables"}, status=404)
     def age(self, birthdate):
         today = timezone.now().date()
         dob = timezone.datetime.strptime(str(birthdate),'%Y-%m-%d')
@@ -210,4 +210,4 @@ class FollowupAnalytics(APIView):
                              status=200)        
 
         except Exception as e:
-            return Response({"error":str(e)}, status=500)
+            return Response({"error":"Please ensure there are data in the database tables before trying to analyze it"}, status=404)
