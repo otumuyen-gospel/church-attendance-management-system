@@ -20,11 +20,13 @@ class EmailService:
     @staticmethod
     def get_image_url(image_url):
         """Get full URL for image (for external URL method)."""
-        static_logo =f"{settings.SITE_URL}/apis/static/images/logo.jpg"
+        static_logo =f"{settings.SITE_URL}/static/images/logo.jpg"
         if image_url == 'logo.jpg':
             return static_logo
-        else:
-            return settings.SITE_URL +  image_url;
+        elif settings.APP_ENV == 'local':
+            return settings.SITE_URL +  image_url
+        elif settings.APP_ENV == 'production':
+            return image_url
     
     @staticmethod
     def send_automated_email(
