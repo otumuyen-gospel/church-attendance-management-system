@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'storages',
     'drf_spectacular',
+    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -151,16 +152,21 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Set Anymail as your email backend
+EMAIL_BACKEND = "anymail.backends.mailtrap.EmailBackend"
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # test on your console instead
-EMAIL_HOST = os.environ.get('EMAIL_HOST','')  # Or your email provider's SMTP host
-EMAIL_PORT = os.environ.get('EMAIL_PORT','')  # Common port for TLS
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS','')  # Use TLS encryption
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER','')  # Your email address
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD','')  # An app-specific password if using Gmail/similar
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL','')  # Set a proper from email
-EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT','10'))  # Set email timeout in seconds
+ANYMAIL = {
+    # Found in Mailtrap Settings -> API Tokens
+    "MAILTRAP_API_TOKEN":os.environ.get("MAILTRAP_API_TOKEN") ,
+    
+    # OPTIONAL: Only set this if you want to use the Sandbox for testing.
+    # If omitted, Anymail uses the Transactional Email API/SMTP service.
+    "MAILTRAP_SANDBOX_ID": os.environ.get("MAILTRAP_SANDBOX_ID"),
+}
+
+# Standard Django email settings
+DEFAULT_FROM_EMAIL =  os.environ.get('DEFAULT_FROM_EMAIL','')
+SERVER_EMAIL =  os.environ.get('DEFAULT_FROM_EMAIL','')
 
 # Site Configuration for Email Links in production
 SITE_NAME = 'Church Membership and Attendance Management System'
