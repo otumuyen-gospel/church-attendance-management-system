@@ -20,6 +20,10 @@ DATABASES = {
 }
 
 #used on Local Development only
+MEDIA_ROOT_LOCAL = os.path.join(os.path.dirname(BASE_DIR), 'uploads')
+# URL used to access the media
+MEDIA_URL_LOCAL = '/media/'
+
 STATICFILES_STORAGE = os.environ.get("STATICFILES_STORAGE_DJANGO")
 DBBACKUP_STORAGE_OPTIONS = {'location':os.path.join(os.path.dirname(BASE_DIR), 'uploads'), 'default_acl': 'private'}
 DBBACKUP_STORAGE = os.environ.get('DEFAULT_FILE_STORAGE_DJANGO')

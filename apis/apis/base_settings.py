@@ -287,9 +287,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 #used on production with whitenoise
 DBBACKUP_FILENAME_TEMPLATE = 'backup_db_{datetime}.sql'
 DBBACKUP_MEDIA_FILENAME_TEMPLATE = 'backup_file_{datetime}.tar'
-MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'uploads')
-# URL used to access the media
-MEDIA_URL = '/media/'
 
 # different password hashers for better security(argon2 most secured and fastest, bcrypt is also secured and faster than default, pbkdf2 and pbkdf2sha1 are the default hashers and less secure and fast)
 #to use any of the hashers make it come first in the list

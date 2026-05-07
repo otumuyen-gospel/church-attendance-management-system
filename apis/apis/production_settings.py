@@ -32,6 +32,10 @@ DATABASES = {
 }
 
 # only in production
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT_PROD')
+# URL used to access the media
+MEDIA_URL = f'https://{os.environ.get('MEDIA_URL_PROD')}/'
+
 STATICFILES_STORAGE = os.environ.get("STATICFILES_STORAGE_WHITENOISE")
 
 DBBACKUP_STORAGE_OPTIONS = {'location':'uploads', 'default_acl': 'private'}
