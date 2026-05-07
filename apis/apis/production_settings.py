@@ -48,3 +48,10 @@ AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 DEFAULT_FILE_STORAGE = os.environ.get('DEFAULT_FILE_STORAGE_SUPERBASE')
 AWS_S3_CUSTOM_DOMAIN = f'imlqklfexwpjkjjviiha.supabase.co/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}'
 
+# IMPORTANT: Ensure MEDIA_URL does not override your storage backend
+# It's safest to set it to point to your custom domain
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
+# This setting prevents Django from adding unnecessary S3 query parameters 
+# that can break public Supabase links
+AWS_QUERYSTRING_AUTH = False
