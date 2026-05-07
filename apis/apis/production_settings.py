@@ -32,9 +32,6 @@ DATABASES = {
 }
 
 # only in production
-MEDIA_ROOT = os.environ.get('MEDIA_ROOT_PROD')
-# URL used to access the media
-MEDIA_URL = f'https://{os.environ.get('MEDIA_URL_PROD')}/'
 
 STATICFILES_STORAGE = os.environ.get("STATICFILES_STORAGE_WHITENOISE")
 
@@ -49,3 +46,4 @@ AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 # Tell Django to use S3 for media files in production
 DEFAULT_FILE_STORAGE = os.environ.get('DEFAULT_FILE_STORAGE_SUPERBASE')
+AWS_S3_CUSTOM_DOMAIN = f'imlqklfexwpjkjjviiha.supabase.co/storage/v1/object/public/{os.environ.get('AWS_STORAGE_BUCKET_NAME')}'
