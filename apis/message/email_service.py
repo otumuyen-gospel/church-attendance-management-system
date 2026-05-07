@@ -23,9 +23,9 @@ class EmailService:
         static_logo =f"{settings.SITE_URL}/static/images/logo.jpg"
         if image_url == 'logo.jpg':
             return static_logo
-        elif settings.APP_ENV == 'local':
-            return settings.SITE_URL +  image_url
-        elif settings.APP_ENV == 'production':
+        elif os.environ.get('APP_ENV') == "local":
+            return settings.SITE_URL +  image_url;
+        elif os.environ.get('APP_ENV') == 'production':
             return image_url
     
     @staticmethod
