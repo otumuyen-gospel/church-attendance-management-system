@@ -31,7 +31,7 @@ import bisect
 
 # Create your views here.
 class Analytics(APIView):
-    permission_classes = [AllowAny] #only authenticated users can access
+    permission_classes = [IsAuthenticated] #only authenticated users can access
     name = 'Analytics'
     def get(self,request):
         try:
