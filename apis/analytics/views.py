@@ -31,7 +31,7 @@ import bisect
 
 # Create your views here.
 class Analytics(APIView):
-    permission_classes = [IsAuthenticated] #only authenticated users can access
+    permission_classes = [AllowAny] #only authenticated users can access
     name = 'Analytics'
     def get(self,request):
         try:
@@ -44,25 +44,27 @@ class Analytics(APIView):
             #only todays's attendance
             today = timezone.localtime(timezone.now()).date()
             attendance = Attendance.objects.filter(checkInTimestamp__date=today).values()
-            df = pd.merge(pd.DataFrame.from_records(persons), 
+            statistics = {}
+            if persons and contacts:
+                df = pd.merge(pd.DataFrame.from_records(persons), 
                           pd.DataFrame.from_records(contacts), left_on='id', 
                           right_on='personId_id', how='outer')
 
-            men = df[(df['gender'] == 'M') & ((df['marital_status'] == 'MARRIED') | 
+                men = df[(df['gender'] == 'M') & ((df['marital_status'] == 'MARRIED') | 
                                               (df['marital_status'] == 'SEPARATED'))].shape[0]
-            women = df[(df['gender'] == 'F') & ((df['marital_status'] == 'MARRIED') | 
+                women = df[(df['gender'] == 'F') & ((df['marital_status'] == 'MARRIED') | 
                                               (df['marital_status'] == 'SEPARATED'))].shape[0]
-            youths = 0
-            teens = 0
-            children = 0
-            for row in df.itertuples(index=False):
-                youths  += 1 if (row.marital_status == 'SINGLE' and self.age(row.dob) > 19) else 0
-                teens  += 1 if (row.marital_status == 'SINGLE' and (self.age(row.dob) > 12 and self.age(row.dob) < 19)) else 0
-                children  += 1 if (row.marital_status == 'SINGLE' and self.age(row.dob) < 12) else 0
-            total_users = len(users)
-            families = len(household)
-            total_persons = df.shape[0]
-            statistics = {
+                youths = 0
+                teens = 0
+                children = 0
+                for row in df.itertuples(index=False):
+                     youths  += 1 if (row.marital_status == 'SINGLE' and self.age(row.dob) > 19) else 0
+                     teens  += 1 if (row.marital_status == 'SINGLE' and (self.age(row.dob) > 12 and self.age(row.dob) < 19)) else 0
+                     children  += 1 if (row.marital_status == 'SINGLE' and self.age(row.dob) < 12) else 0
+                total_users = len(users)
+                families = len(household)
+                total_persons = df.shape[0]
+                statistics = {
                 "men": men,
                 "women": women,
                 "youths": youths,
@@ -71,9 +73,8 @@ class Analytics(APIView):
                 "total_users": total_users,
                 "families": families,
                 "total_persons": total_persons,
-            }
-
-            membership = df['membershipId_id'].value_counts()
+                }
+            membership = df['membershipId_id'].value_counts() 
             membership_status = {}
             for member in membership.items():
                 membership_status[Membership.objects.get(id=member[0]).status]= member[1]
@@ -83,11 +84,12 @@ class Analytics(APIView):
             for ethnic in ethnicity.items():
                 ethnic_groups[ethnic[0]] = ethnic[1]
 
-            df3 = pd.DataFrame.from_records(leaderships)
-            leadership = df3['roleId_id'].value_counts()
             leadership_status = {}
-            for leader in leadership.items():
-                leadership_status[Role.objects.get(id=leader[0]).name]= leader[1]
+            if leaderships:
+                df3 = pd.DataFrame.from_records(leaderships)
+                leadership = df3['roleId_id'].value_counts()
+                for leader in leadership.items():
+                    leadership_status[Role.objects.get(id=leader[0]).name]= leader[1]
 
             # Annual Membership Growth for the last 5 years
             five_years_age = timezone.now() - timedelta(days=5*365)
@@ -121,7 +123,7 @@ class Analytics(APIView):
                              "leadership_status": leadership_status, "annual_growth": annual_membership_statistics, 
                              "current_year_monthly_growth": current_year_monthly_membership_statistics, "today_attendance": today_attendance }, status=200)
         except Exception as e:
-            return Response({"error": "Please ensure there are values in the database tables"}, status=404)
+            return Response({"message":"Please ensure your database tables are filled before your analysis"}, status=404)
     def age(self, birthdate):
         today = timezone.now().date()
         dob = timezone.datetime.strptime(str(birthdate),'%Y-%m-%d')
@@ -210,4 +212,4 @@ class FollowupAnalytics(APIView):
                              status=200)        
 
         except Exception as e:
-            return Response({"error":"Please ensure there are data in the database tables before trying to analyze it"}, status=404)
+            return Response({"message":"Please ensure your database tables are filled before your analysis"}, status=404)
