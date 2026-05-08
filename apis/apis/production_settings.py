@@ -46,12 +46,12 @@ AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 # Tell Django to use S3 for media files in production
 DEFAULT_FILE_STORAGE = os.environ.get('DEFAULT_FILE_STORAGE_SUPERBASE')
-AWS_S3_CUSTOM_DOMAIN = f'imlqklfexwpjkjjviiha.supabase.co/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}'
+#AWS_S3_CUSTOM_DOMAIN = f'imlqklfexwpjkjjviiha.supabase.co/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}'
 
 # IMPORTANT: Ensure MEDIA_URL does not override your storage backend
 # It's safest to set it to point to your custom domain
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+#MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
-# This setting prevents Django from adding unnecessary S3 query parameters 
-# that can break public Supabase links
-AWS_QUERYSTRING_AUTH = False
+AWS_S3_ADDRESSING_STYLE = "path"               # Required for Supabase
+AWS_S3_SIGNATURE_VERSION = "s3v4"              # Supabase requires SigV4
+AWS_QUERYSTRING_AUTH = True   
