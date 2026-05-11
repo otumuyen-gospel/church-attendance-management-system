@@ -15,7 +15,7 @@ class ChurchSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Church
-        fields = '__all__'
+        fields = ['id', 'logo', 'address', 'description', 'name']
     
     def get_logo(self, obj):
         if not obj.logo:
