@@ -31,7 +31,7 @@ class ChurchSerializers(serializers.ModelSerializer):
 
         # --- PRODUCTION ENVIRONMENT ---
         try:
-            file_path = obj.logo.name
+            file_path = obj.logo.name.lstrip('/')
             # Note: Ensure bucket name is consistent with your prod setup
             response = supabase.storage.from_(settings.AWS_STORAGE_BUCKET_NAME).create_signed_url(
                 path=file_path, 
