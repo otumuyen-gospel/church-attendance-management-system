@@ -31,29 +31,47 @@ DATABASES = {
     )
 }
 
-# only in production
-
+# only in production for static files
 STATICFILES_STORAGE = os.environ.get("STATICFILES_STORAGE_WHITENOISE")
 
+# for media and backup file in superbase storage
 DBBACKUP_STORAGE_OPTIONS = {'location':'uploads', 'default_acl': 'private'}
 DBBACKUP_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Supabase S3 upload storage Configuration
+import boto3
+from botocore.config import Config
+# Force SigV4
+my_config = Config(
+    signature_version='s3v4',
+    s3={'addressing_style': 'path'}
+)
+
+s3_client = boto3.client(
+    's3',
+    endpoint_url=os.environ.get('AWS_S3_ENDPOINT_URL'), # Use your specific S3 endpoint
+    aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
+    region_name=os.environ.get('AWS_S3_REGION_NAME'), # e.g., 'us-east-1'
+    config=my_config
+)
+
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
-# Tell Django to use S3 for media files in production
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-AWS_S3_CUSTOM_DOMAIN = f'imlqklfexwpjkjjviiha.supabase.co/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}'
+AWS_QUERYSTRING_AUTH = True
 
-MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+# Tell Django to use S3 for public media files in production 
+#AWS_S3_CUSTOM_DOMAIN = f'imlqklfexwpjkjjviiha.supabase.co/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}'
+
+#MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 
 #AWS_S3_ADDRESSING_STYLE = "path"               # Required for Supabase
-#AWS_S3_SIGNATURE_VERSION = "s3v4"              # Supabase requires SigV4
-AWS_QUERYSTRING_AUTH = False   
+#AWS_S3_SIGNATURE_VERSION = "s3v4"              # Supabase requires SigV4   
 # Ensure path style is used
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None
-AWS_FORCE_PATH_STYLE = True # Important for Supabase
+#AWS_S3_FILE_OVERWRITE = False
+#AWS_DEFAULT_ACL = None
+#AWS_FORCE_PATH_STYLE = True # Important for Supabase
