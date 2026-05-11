@@ -19,8 +19,8 @@ from user.permissions import IsInGroup
 class ChurchList(generics.ListAPIView):
     queryset = Church.objects.all()
     serializer_class = ChurchSerializers
-    permission_classes = [AllowAny,]
-    #required_groups = requiredGroups(permission='view_church')
+    permission_classes = [IsAuthenticated, IsInGroup,]
+    required_groups = requiredGroups(permission='view_church')
     name = 'church-list'
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
