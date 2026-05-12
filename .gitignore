@@ -3,6 +3,10 @@
 venv/
 env/
 
+# AI Models / Large Assets
+apis/models/buffalo_l/
+*.onnx
+
 # Python
 __pycache__/
 *.py[cod]
