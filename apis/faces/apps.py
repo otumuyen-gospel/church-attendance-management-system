@@ -8,3 +8,7 @@ class FacesConfig(AppConfig):
 
     def ready(self):
         import faces.signals  # noqa
+
+        from .storage import StorageService
+
+        FacesConfig.storage = StorageService()

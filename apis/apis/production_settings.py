@@ -32,30 +32,8 @@ DATABASES = {
 }
 
 # only in production
-
+# only in production for static and media files
 STATICFILES_STORAGE = os.environ.get("STATICFILES_STORAGE_WHITENOISE")
-
-DBBACKUP_STORAGE_OPTIONS = {'location':'uploads', 'default_acl': 'private'}
-DBBACKUP_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# Supabase S3 upload storage Configuration
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
-AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
-# Tell Django to use S3 for media files in production
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 SERVICE_ROLE_KEY=os.environ.get('SERVICE_ROLE_KEY')
 SUPERBASE_URL=os.environ.get('SUPERBASE_URL')
-
-#AWS_S3_CUSTOM_DOMAIN = f'imlqklfexwpjkjjviiha.supabase.co/storage/v1/object/sign/{AWS_STORAGE_BUCKET_NAME}'
-#MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
-
-AWS_S3_ADDRESSING_STYLE = "path"               # Required for Supabase
-AWS_S3_SIGNATURE_VERSION = "s3v4"              # Supabase requires SigV4
-AWS_QUERYSTRING_AUTH = True
-# Ensure path style is used
-#AWS_S3_FILE_OVERWRITE = False
-#AWS_DEFAULT_ACL = None
-#AWS_FORCE_PATH_STYLE = True # Important for Supabase
+AWS_STORAGE_BUCKET_NAME=os.environ.get('AWS_STORAGE_BUCKET_NAME')

@@ -3,11 +3,8 @@ from person.models import Person
 from encrypted_json_fields.fields import EncryptedJSONField
 
 # Create your models here.
-def upload_to(instance, filename):
-    return 'user_faces_pics_{0}_{1}'.format(instance.id, filename)
-
 class Faces(models.Model):
-    pics = models.FileField(blank=False, upload_to=upload_to)
+    pics = models.CharField(max_length=500, blank=False, default="welcome")
     personId = models.ForeignKey(Person, on_delete=models.CASCADE)
     encoding = EncryptedJSONField(null=False, default=dict) # Stores the 128-d vector
 

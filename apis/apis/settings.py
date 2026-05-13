@@ -7,7 +7,8 @@ if environment == "local":
     from .development_settings import *
 elif environment == 'production':
     from  .production_settings import *
-
+elif environment == 'hybrid':
+    from  .hybrid_settings import *
 
 
 

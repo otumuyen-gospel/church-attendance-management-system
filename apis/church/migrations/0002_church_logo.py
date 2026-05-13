@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='church',
             name='logo',
-            field=models.FileField(blank=True, null=True, upload_to=church.models.upload_to),
+            field=models.FileField(blank=True, null=True, upload_to="uploads/"),
         ),
     ]

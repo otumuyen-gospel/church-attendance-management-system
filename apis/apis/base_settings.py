@@ -73,7 +73,6 @@ INSTALLED_APPS = [
     'message',
     'encrypted_json_fields',
     'django.contrib.staticfiles',
-    'storages',
     'drf_spectacular',
     'anymail',
 ]

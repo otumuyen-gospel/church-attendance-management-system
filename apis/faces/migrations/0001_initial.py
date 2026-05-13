@@ -18,9 +18,9 @@ class Migration(migrations.Migration):
             name='Faces',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('pics', models.FileField(upload_to=faces.models.upload_to)),
-                ('pics2', models.FileField(blank=True, null=True, upload_to=faces.models.upload_to)),
-                ('pics3', models.FileField(blank=True, null=True, upload_to=faces.models.upload_to)),
+                ('pics', models.FileField(upload_to="uploads/")),
+                ('pics2', models.FileField(blank=True, null=True, upload_to="uploads/")),
+                ('pics3', models.FileField(blank=True, null=True, upload_to="uploads/")),
                 ('encoding', models.JSONField(default=dict)),
                 ('personId', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='person.person')),
             ],

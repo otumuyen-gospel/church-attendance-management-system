@@ -21,11 +21,9 @@ class EmailService:
     def get_image_url(image_url):
         """Get full URL for image (for external URL method)."""
         static_logo =f"{settings.SITE_URL}/static/images/logo.jpg"
-        if image_url == 'logo.jpg':
+        if not image_url:
             return static_logo
-        elif os.environ.get('APP_ENV') == "local":
-            return settings.SITE_URL +  image_url;
-        elif os.environ.get('APP_ENV') == 'production':
+        else:
             return image_url
     
     @staticmethod
@@ -147,7 +145,7 @@ class EmailService:
             'church_name': church_name,
             'roles':roles,
             'site_url': settings.SITE_URL,
-            'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
+            'logo_url': EmailService.get_image_url(church_logo),
         }
         
         EmailService.send_automated_email(
@@ -163,7 +161,7 @@ class EmailService:
         context = {
             'user_name': user_name,
             'verification_code': verification_code,
-            'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
+            'logo_url': EmailService.get_image_url(church_logo),
         }
         
         EmailService.send_automated_email(
@@ -180,7 +178,7 @@ class EmailService:
         context = {
             'user_name': user_name,
             'verification_code': verification_code,
-            'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
+            'logo_url': EmailService.get_image_url(church_logo),
         }
         
         EmailService.send_automated_email(
@@ -201,7 +199,7 @@ class EmailService:
             'detail': detail,
             'title':title,
             'site_url': settings.SITE_URL,
-            'logo_url': EmailService.get_image_url(church_logo if church_logo else 'logo.jpg'),
+            'logo_url': EmailService.get_image_url(church_logo),
            }
             contexts.append(context)
 

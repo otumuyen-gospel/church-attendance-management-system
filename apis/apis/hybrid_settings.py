@@ -8,7 +8,7 @@ import dj_database_url
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['192.168.1.5', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['10.225.188.68', 'localhost', '127.0.0.1']
 SITE_URL = os.environ.get("SITE_URL_LOCAL")
 
 # superbase cloud PostgreSQL Connection
