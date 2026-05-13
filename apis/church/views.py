@@ -1,3 +1,4 @@
+
 from .models import Church
 from .serializers import ChurchSerializers
 from django.shortcuts import render
@@ -14,6 +15,9 @@ from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 from role.util import requiredGroups
 from user.permissions import IsInGroup
+
+from faces.apps import FacesConfig
+storage = FacesConfig.storage
 
 #this generic class will handle GET method to be used by the admin alone
 class ChurchList(generics.ListAPIView):
@@ -42,6 +46,13 @@ class UpdateChurch(generics.UpdateAPIView):
     required_groups = requiredGroups(permission='change_church')
     name = 'church-update'
     lookup_field = "id"
+    def perform_update(self, serializer):
+        logo = self.request.FILES.get('logo')
+        if logo:
+             new_path = storage.update_file(str(serializer.instance.logo), logo)
+             if new_path:
+                serializer.save(logo=new_path)
+        return super().perform_update(serializer)
 
 class DeleteChurch(generics.DestroyAPIView):
     queryset = Church.objects.all()
@@ -50,6 +61,11 @@ class DeleteChurch(generics.DestroyAPIView):
     required_groups = requiredGroups(permission='delete_church')
     name = 'delete-church'
     lookup_field = "id"
+    def perform_destroy(self, instance):
+       if instance.logo:
+          storage.delete_file(str(instance.logo))
+
+       return super().perform_destroy(instance)
 
 class CreateChurch(generics.CreateAPIView):
     queryset = Church.objects.all()
@@ -57,3 +73,11 @@ class CreateChurch(generics.CreateAPIView):
     permission_classes = [IsAuthenticated, IsInGroup,]
     required_groups = requiredGroups(permission='add_church')
     name = 'create-church'
+
+    def perform_create(self, serializer):
+        logo = self.request.FILES.get('logo')
+        if logo:
+             new_path = storage.upload_file(logo)
+             if new_path:
+                serializer.save(logo=new_path)
+        return super().perform_create(serializer)

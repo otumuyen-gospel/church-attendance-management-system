@@ -13,6 +13,10 @@ from church.models import Church
 from person.models import Person
 from user.apps import executor
 
+from faces.apps import FacesConfig
+storage = FacesConfig.storage
+
+
 class SignupViewset(ViewSet):
     serializer_class = SignupSerializer
     permission_classes = [IsAuthenticated,IsInGroup,]
@@ -47,27 +51,15 @@ class SignupViewset(ViewSet):
         
         try:
                 # Use the executor thread pool to send the email asynchronously
-            if church.logo:
-                    url = church.logo.url
-            else:
-                    url = None
+            
             executor.submit(EmailService.send_welcome_email,
                                 request.data['email'],
                                request.data['username'],
                                church.name,
                              role.permissions.split(','),
-                             url)
+                             storage.get_url(church.logo))
         except Exception as e:
                 raise Response({"Error": "Failed to send user welcome email"}, status=status.HTTP_400_BAD_REQUEST)
-       
-        '''
-        EmailService.send_welcome_email(
-         user_email=request.data['email'],
-         user_name=request.data['username'],
-         church_name=church.name,
-         church_logo=church.logo.url,
-         roles = role.permissions.split(',')
-        )'''
         
         return Response({"user": serializer.data,
                          "refresh": res["refresh"],

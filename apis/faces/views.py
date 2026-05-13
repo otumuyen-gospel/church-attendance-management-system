@@ -25,6 +25,8 @@ from services.models import Services
 from capturemethod.models import CaptureMethod
 from django.utils import timezone
 
+storage = FacesConfig.storage
+
 class FacesList(generics.ListAPIView):
     queryset = Faces.objects.all()
     serializer_class = FacesSerializers
@@ -57,35 +59,38 @@ class CacheFaces(generics.GenericAPIView):
         FacesCache.refresh_cache()
         return Response({"message": "Faces cache refreshed successfully"}, status=status.HTTP_200_OK)
 
-class UpdateFaces(generics.GenericAPIView):
+class UpdateFaceView(generics.GenericAPIView):
     serializer_class = CreateFaceSerializer
     permission_classes = [IsAuthenticated, IsInGroup]
     required_groups = requiredGroups(permission='change_faces')
     name = 'faces-update'
-    
     def post(self, request, *args, **kwargs):
-        #Get request data
-        id = self.request.data.get('personId')
-        if not id:
-            return Response({"error": "personId is required"}, status=status.HTTP_400_BAD_REQUEST)
-        personId = Person.objects.get(id=id)
-        if not personId:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return self.perform_update(serializer)
+    def perform_update(self, serializer):
+        personId = serializer.validated_data.get('personId')
+        persons = Person.objects.filter(id=personId)
+        if not persons.exists():
             return Response({"error": "Person with the provided ID does not exist."}, status=status.HTTP_404_NOT_FOUND)
         face = Faces.objects.filter(personId=personId)
         if not face.exists():
             return Response({"error": "No existing face record found for this person."}, status=status.HTTP_404_NOT_FOUND)
         
-        # Load and encode
-        frontview = self.request.FILES.get('frontview')
-        leftsideview = self.request.FILES.get('leftsideview')
-        rightsideview = self.request.FILES.get('rightsideview')
-        smileview = self.request.FILES.get('smileview')
-        frownview = self.request.FILES.get('frownview')
-        image_files = [frontview, leftsideview, rightsideview, smileview, frownview]
-        if not all(image_files):
-            return Response({"error": "frontview, leftsideview, rightsideview, smileview(smiling), and frownview(frowning) of user face are all required"}, status=status.HTTP_400_BAD_REQUEST)
-        
+        person = persons.first()
+        face = face.first()
 
+        #get uploaded files
+        pics = serializer.validated_data.get('frontview')
+        image_files= [
+            pics,
+            serializer.validated_data.get('leftsideview'),
+            serializer.validated_data.get('rightsideview'),
+            serializer.validated_data.get('smileview'),
+            serializer.validated_data.get('frownview')
+        ]
+
+        # encode and uplaod faces data
          # Process images sequentially 
         all_encodings = []
         for file in image_files:
@@ -103,12 +108,85 @@ class UpdateFaces(generics.GenericAPIView):
         master_encoding = master_encoding / np.linalg.norm(master_encoding)
 
         #update existing face record for the person
-        face = face.first()
-        face.encoding=master_encoding.tolist()
-        face.pics=frontview
-        face.save()
+        if pics:
+            pics.seek(0)
+            new_path = storage.update_file(str(face.pics), pics)
+            if new_path:
+                face.pics = new_path
+                face.encoding=master_encoding.tolist()
+                face.save()
+            else:
+                return Response({"error":"Failed to update face"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response({"error":"Failed to upload Front View image"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         return Response({
-            "message": f"Face updated for {personId.firstName} {personId.lastName}",
+            "message": f"Face updated for {person.firstName} {person.lastName}",
+        }, status=status.HTTP_201_CREATED)
+
+
+class CreateFaceView(generics.GenericAPIView):
+    serializer_class = CreateFaceSerializer
+    permission_classes = [IsAuthenticated, IsInGroup]
+    required_groups = requiredGroups(permission='add_faces')
+    name = 'faces-create'
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return self.perform_create(serializer)
+    def perform_create(self, serializer):
+        personId = serializer.validated_data.get('personId')
+        persons = Person.objects.filter(id=personId)
+        if not persons.exists():
+            return Response({"error": "Person with the provided ID does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        face = Faces.objects.filter(personId=personId)
+        if face.exists():
+            return Response({"error": "Face record already exists for this person."}, status=status.HTTP_400_BAD_REQUEST)
+
+        person = persons.first()
+
+        #get uploaded files
+        pics = serializer.validated_data.get('frontview')
+        image_files= [
+            pics,
+            serializer.validated_data.get('leftsideview'),
+            serializer.validated_data.get('rightsideview'),
+            serializer.validated_data.get('smileview'),
+            serializer.validated_data.get('frownview')
+        ]
+
+        # encode and upload faces data
+         # Process images sequentially 
+        all_encodings = []
+        for file in image_files:
+           encoding= FacesConfig.face_handler.get_embedding(file.read())
+           if encoding is not None:
+               all_encodings.append(encoding)
+
+        if not all_encodings:
+            return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Average the encodings for better accuracy
+        master_encoding = np.mean(np.array(all_encodings), axis=0)
+        
+        # Normalize the averaged vector (Crucial for cosine similarity)
+        master_encoding = master_encoding / np.linalg.norm(master_encoding)
+
+        #update existing face record for the person
+        if pics:
+            pics.seek(0)
+            new_path = storage.upload_file(pics)
+            if new_path:
+                Faces.objects.create(personId=person, 
+                                     pics=new_path,
+                                     encoding=master_encoding.tolist())
+            else:
+                return Response({"error":"Failed to upload face"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response({"error":"Failed to upload Front View image"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({
+            "message": f"Face uploaded for {person.firstName} {person.lastName}",
         }, status=status.HTTP_201_CREATED)
 
 
@@ -120,57 +198,12 @@ class DeleteFaces(generics.DestroyAPIView):
     name = 'delete-faces'
     lookup_field = "id"
 
-class CreateFaces(generics.GenericAPIView):
-    serializer_class = CreateFaceSerializer
-    permission_classes = [IsAuthenticated, IsInGroup]
-    required_groups = requiredGroups(permission='add_faces')
-    name = 'create-faces'
-    def post(self,request, *args, **kwargs):
-        #Get request data
-        id = self.request.data.get('personId')
-        if not id:
-            return Response({"error": "personId is required"}, status=status.HTTP_400_BAD_REQUEST)
-        personId = Person.objects.get(id=id)
-        if not personId:
-            return Response({"error": "Person with the provided ID does not exist."}, status=status.HTTP_404_NOT_FOUND)
-        if Faces.objects.filter(personId=personId).exists():
-            return Response({"error": "A face record already exists for this person."}, status=status.HTTP_400_BAD_REQUEST)
+    def perform_destroy(self, instance):
+       if instance.pics:
+          storage.delete_file(str(instance.pics))
 
-        # upload face views
-        frontview = self.request.FILES.get('frontview')
-        leftsideview = self.request.FILES.get('leftsideview')
-        rightsideview = self.request.FILES.get('rightsideview')
-        smileview = self.request.FILES.get('smileview')
-        frownview = self.request.FILES.get('frownview')
-        image_files = [frontview, leftsideview, rightsideview, smileview, frownview]
-        if not all(image_files):
-            return Response({"error": "frontview, leftsideview, rightsideview, smileview(smiling), and frownview(frowning) of user face are all required"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        
-        # Process images sequentially 
-        all_encodings = []
-        for file in image_files:
-           encoding = FacesConfig.face_handler.get_embedding(file.read())
-           if encoding is not None:
-               all_encodings.append(encoding)
-        
-        if not all_encodings:
-            return Response({"error": "No faces detected in any of the provided images"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        master_encoding = np.mean(np.array(all_encodings), axis=0)
-        
-        # Normalize the averaged vector (Crucial for cosine similarity)
-        master_encoding = master_encoding / np.linalg.norm(master_encoding)
-
-        #create new face record for the person
-        Faces.objects.create(personId=personId, encoding=master_encoding.tolist(), pics=frontview)
-        
-        return Response({
-            "message": f"Face created for {personId.firstName} {personId.lastName}",
-        }, status=status.HTTP_201_CREATED)
-
-
-
+       return super().perform_destroy(instance)
+    
 class RecognizeFaceView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, IsInGroup]
     serializer_class = RecognizeFaceSerializer
@@ -245,3 +278,8 @@ class RecognizeFaceView(generics.GenericAPIView):
             return self.capture_attendance(person.id, services, float(score))
 
         return Response({"match": False, "message": "Unknown person(face not recognized)"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+

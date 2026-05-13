@@ -26,6 +26,8 @@ from rest_framework.decorators import action
 from django.core.exceptions import ImproperlyConfigured
 from user.apps import executor
 
+from faces.apps import FacesConfig
+storage = FacesConfig.storage
 
 
 #this generic class will handle GET method to be used by the admin alone
@@ -131,11 +133,8 @@ class sendEmailMSG(generics.CreateAPIView):
         
         try:
             # Fire and forget: send email in a thread without blocking the main request thread
-            if church.logo:
-                url = church.logo.url
-            else:
-                url = None
-            executor.submit(EmailService.send_generic_email, recipients.split(','), username, title, detail, church.name,url )
+            executor.submit(EmailService.send_generic_email, recipients.split(','), username, title, detail, church.name, 
+                            storage.get_url(church.logo))
 
             serializer.save(senderId=self.request.user.personId)
         except Exception as e:

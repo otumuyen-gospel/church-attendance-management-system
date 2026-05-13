@@ -27,6 +27,10 @@ from django.utils.timezone import now
 from django.core.cache import cache
 from user.apps import executor
 
+
+from faces.apps import FacesConfig
+storage = FacesConfig.storage
+
 class PreAuthToken(Token):
     token_type = 'pre_auth'
     lifetime = timedelta(minutes=10)
@@ -75,15 +79,11 @@ class FaceLoginView(ViewSet):
             
             try:
                 # Use the executor thread pool to send the email asynchronously
-                if church.logo:
-                    url = church.logo.url
-                else:
-                    url = None
                 executor.submit(EmailService.send_two_factor_email,
                                 user.email,
                                 user.username,
                                 user.otp,
-                                url)
+                                storage.get_url(church.logo))
             except Exception as e:
                 raise Response({"Error": "Failed to send OTP email"}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -171,15 +171,11 @@ class LoginView(ViewSet):
             
             try:
                 # Use the executor thread pool to send the email asynchronously
-                if church.logo:
-                    url = church.logo.url
-                else:
-                    url = None
                 executor.submit(EmailService.send_two_factor_email,
                                 user.email,
                                 user.username,
                                 user.otp,
-                                url)
+                                storage.get_url(church.logo))
             except Exception as e:
                 raise Response({"Error": "Failed to send OTP email"}, status=status.HTTP_400_BAD_REQUEST)
             

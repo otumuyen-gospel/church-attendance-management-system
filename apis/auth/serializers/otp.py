@@ -5,6 +5,9 @@ from user.models import User
 from django.urls import reverse
 from message import EmailService
 from user.apps import executor 
+from faces.apps import FacesConfig
+storage = FacesConfig.storage
+
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -22,21 +25,10 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
         try:
             church_logo=user.personId.churchId.logo if user.personId and user.personId.churchId else None
-            if church_logo:
-                    url = church_logo.url
-            else:
-                    url = None
             # Fire and forget: send email in a thread without blocking the main request thread
-            executor.submit(EmailService.send_verification_email, user.email, user.username, user.otp, url)
+            executor.submit(EmailService.send_verification_email, user.email, user.username, user.otp, storage.get_url(church_logo))
         except Exception as e:
             serializers.ValidationError("Error sending verification email.")
-        '''
-        EmailService.send_verification_email(
-           user_email=user.email,
-           user_name=user.username,
-           verification_code=user.otp,
-           church_logo=user.personId.churchId.logo.url if user.personId and user.personId.churchId else None
-        )'''
 
         return value
 

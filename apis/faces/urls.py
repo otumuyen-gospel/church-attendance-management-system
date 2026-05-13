@@ -20,9 +20,9 @@ from .views import *
 
 urlpatterns = [
     path('face-lists/', FacesList.as_view(), name='faces-list'),
-    path('upload-face/', CreateFaces.as_view(), name='create-faces'),
+    path('upload-face/', CreateFaceView.as_view(), name='create-faces'),
     path('remove-face/<int:id>/', DeleteFaces.as_view(), name='delete-faces'),
-    path('modify-face/', UpdateFaces.as_view(), name='faces-update'),
+    path('modify-face/', UpdateFaceView.as_view(), name='faces-update'),
     path('recognize-face/', RecognizeFaceView.as_view(), name='recognize'),
     path('cache-face/', CacheFaces.as_view(), name='cache'),
 ]
