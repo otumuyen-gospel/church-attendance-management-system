@@ -47,6 +47,7 @@ urlpatterns = [
     path("analytics/",include('analytics.urls'), name="Analytics"),
     path("report/",include('report.urls'), name="Reports"),
     path("message/",include('message.urls'), name="Message"),
+    path("followup/",include('followup.urls'), name="Followup"),
      # API DOCUMENTATION
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     # Optional Doc UI:

@@ -253,8 +253,11 @@ class RecognizeFaceView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         file = serializer.validated_data['pics']
         services_id = serializer.validated_data['servicesId']
-        services = Services.objects.get(id=services_id)
-        if services.eventDate != timezone.now().date() and services.eventDay != timezone.now().strftime('%a').upper():
+        services = Services.objects.filter(id=services_id)
+        if not services.exists():
+            return Response({"error":"this service does not exist"},status=status.HTTP_404_NOT_FOUND)
+        service = services.first()
+        if service.eventDate != timezone.now().date() and service.eventDay != timezone.now().strftime('%a').upper():
             return Response({"message" : f"Attendance can only be captured for today's services. The event date for {services.eventName} is {services.eventDate} {services.eventDay} {services.eventTime}."})
 
         # Load uploaded image and get encoding and normalize it
@@ -275,7 +278,7 @@ class RecognizeFaceView(generics.GenericAPIView):
             matched_face = Faces.objects.get(id=matched_face_id)
             person = matched_face.personId
             # Capture attendance
-            return self.capture_attendance(person.id, services, float(score))
+            return self.capture_attendance(person.id, service, float(score))
 
         return Response({"match": False, "message": "Unknown person(face not recognized)"}, status=status.HTTP_404_NOT_FOUND)
 
