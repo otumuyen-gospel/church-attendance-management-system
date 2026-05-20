@@ -8,6 +8,9 @@ DEBUG = False
 SITE_URL = os.environ.get('SITE_URL_PRODUCTION',"https://agc-alimosho-church-apis.onrender.com")
 
 ALLOWED_HOSTS = []
+CORS_ALLOWED_ORIGINS = [
+    os.environ.get('CORS_ALLOWED_ORIGIN'),  # Your production frontend
+]
 # Get the Render URL (e.g., ://onrender.com)
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '*')
 # This adds the Render URL to allowed hosts

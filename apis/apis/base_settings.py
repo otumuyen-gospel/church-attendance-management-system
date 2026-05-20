@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
     'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
     'dbbackup',
     'auditlog',
     'church',
@@ -80,6 +81,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'user.TraceMemoryLeakMiddleWare.SystemMonitorMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

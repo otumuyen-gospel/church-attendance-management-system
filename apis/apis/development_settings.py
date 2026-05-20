@@ -5,6 +5,10 @@ import os
 DEBUG = True
 
 ALLOWED_HOSTS = ['192.168.1.5', 'localhost', '127.0.0.1']
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Your local frontend
+    "http://localhost:5173",  # Your local frontend
+]
 SITE_URL = os.environ.get("SITE_URL_LOCAL")
 
 #use offline local disk postgreSQL 
